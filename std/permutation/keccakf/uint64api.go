@@ -47,7 +47,7 @@ func (w *Uint64api) AsUint64(in frontend.Variable) Xuint64 {
 	return res
 }
 
-func (w *Uint64api) fromUint64(in Xuint64) frontend.Variable {
+func (w *Uint64api) FromUint64(in Xuint64) frontend.Variable {
 	return bits.FromBinary(w.api, in[:], bits.WithUnconstrainedInputs())
 }
 
