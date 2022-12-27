@@ -17,18 +17,20 @@ type Keccak256 struct {
 	dsbyte keccakf2.Xuint64
 	len    int
 	size   int
-	uapi   keccakf2.Uint64api
 	api    frontend.API
+	uapi   *keccakf2.Uint64api
 }
 
 func (h *Keccak256) Api() frontend.API {
 	return h.api
 }
 
-func newKeccak256() *Keccak256 {
-	return &Keccak256{
-		size:   256 / 8,
+func NewKeccak256(api frontend.API) Keccak256 {
+	return Keccak256{
 		dsbyte: keccakf2.ConstUint64(0x0000000000000001),
+		size:   256 / 8,
+		api:    api,
+		uapi:   keccakf2.NewUint64API(api),
 	}
 }
 
@@ -71,12 +73,16 @@ func (h *Keccak256) flush(b []keccakf2.Xuint64) {
 		h.a[i] = uapi.Xor(uapi.AsUint64(h.a[i]), h.le64dec(b))
 		b = b[8:]
 	}
-	keccakf(&h.a, &h)
+	h.keccakf()
 	h.len = 0
 }
 
-func keccakf(a *[25]keccakf2.Xuint64, d **Keccak256) {
-	keccakf2.Permute((*d).api, a)
+func (h *Keccak256) keccakf() {
+	in := [25]frontend.Variable{}
+	for i := range h.a {
+		in[i] = h.uapi.FromUint64(h.a[i])
+	}
+	keccakf2.Permute(h.api, in)
 }
 
 func (h *Keccak256) Sum(data ...frontend.Variable) []frontend.Variable {

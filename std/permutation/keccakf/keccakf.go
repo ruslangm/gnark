@@ -52,16 +52,16 @@ var piln = [24]int{
 // Permute applies Keccak-F permutation on the input a and returns the permuted
 // vector. The input array must consist of 64-bit (unsigned) integers. The
 // returned array also contains 64-bit unsigned integers.
-func Permute(api frontend.API, a *[25]Xuint64) [25]frontend.Variable {
+func Permute(api frontend.API, a [25]frontend.Variable) [25]frontend.Variable {
 	var in [25]Xuint64
 	uapi := NewUint64API(api)
 	for i := range a {
-		in[i] = a[i]
+		in[i] = uapi.AsUint64(a[i])
 	}
 	res := permute(api, in)
 	var out [25]frontend.Variable
 	for i := range out {
-		out[i] = uapi.fromUint64(res[i])
+		out[i] = uapi.FromUint64(res[i])
 	}
 	return out
 }
