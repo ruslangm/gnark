@@ -21,7 +21,9 @@ func (circuit keccak256Circuit) Define(api frontend.API) error {
 	keccak256.Reset()
 	keccak256.Write(circuit.Data[:]...)
 	result := keccak256.Sum()
-	api.AssertIsEqual(result, circuit.ExpectedResult)
+	for i := range result {
+		api.AssertIsEqual(result[i], circuit.ExpectedResult[i])
+	}
 	return nil
 }
 
