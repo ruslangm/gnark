@@ -12,14 +12,14 @@ import (
 )
 
 type keccak256Circuit struct {
-	ExpectedResult frontend.Variable `gnark:"data,public"`
-	Data           frontend.Variable
+	ExpectedResult [32]frontend.Variable `gnark:"data,public"`
+	Data           [32]frontend.Variable
 }
 
-func (circuit *keccak256Circuit) Define(api frontend.API) error {
+func (circuit keccak256Circuit) Define(api frontend.API) error {
 	keccak256 := NewKeccak256(api)
 	keccak256.Reset()
-	keccak256.Write(circuit.Data)
+	keccak256.Write(circuit.Data[:]...)
 	result := keccak256.Sum()
 	api.AssertIsEqual(result, circuit.ExpectedResult)
 	return nil
@@ -37,13 +37,18 @@ func TestKeccak256(t *testing.T) {
 	val := hash.Sum(nil)
 
 	var circuit, witness keccak256Circuit
-	witness.ExpectedResult = val
-	witness.Data = seedBytes
+	for i := range val {
+		witness.ExpectedResult[i] = val[i]
+	}
+	witness.Data = [32]frontend.Variable{}
+	for i := range seedBytes {
+		witness.Data[i] = seedBytes[i]
+	}
 
 	assert.SolvingSucceeded(
 		&circuit,
 		&witness,
 		test.WithBackends(backend.GROTH16),
 		test.WithCurves(ecc.BN254),
-		test.WithCompileOpts(frontend.IgnoreUnconstrainedInputs()))
+	)
 }
