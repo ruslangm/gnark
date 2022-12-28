@@ -74,7 +74,7 @@ func (h *Keccak256) flush() {
 			break
 		}
 		/* S[x, y] = S[x, y] ⊕ Pi[x + 5y],   ∀(x, y) such that x + 5y < r/w */
-		piUint64 := h.decodeToXuint64(b)
+		piUint64 := keccakf2.DecodeToXuint64(b)
 		h.a[i] = h.uapi64.Xor(h.a[i], piUint64)
 		b = b[8:]
 	}
@@ -109,7 +109,7 @@ func (h *Keccak256) Sum(data ...frontend.Variable) []frontend.Variable {
 
 	var res []keccakf2.Xuint8
 	for i := 0; i < d.size/8; i++ {
-		res = h.encodeToXuint8(res, d.a[i])
+		res = keccakf2.EncodeToXuint8(res, d.a[i])
 	}
 
 	r := make([]frontend.Variable, len(res))
@@ -117,42 +117,4 @@ func (h *Keccak256) Sum(data ...frontend.Variable) []frontend.Variable {
 		r[i] = h.uapi8.FromUint8(res[i])
 	}
 	return r
-}
-
-func (h *Keccak256) decodeToXuint64(b []keccakf2.Xuint8) keccakf2.Xuint64 {
-	var res keccakf2.Xuint64
-	for i := range res {
-		res[i] = 0
-	}
-	d := b[:8]
-	for i := len(res) - 1; i >= 0; {
-		for _, v := range d {
-			for z := range v {
-				res[i] = v[len(d)-1-z]
-				i -= 1
-			}
-		}
-	}
-	return res
-}
-
-func (h *Keccak256) encodeToXuint8(b []keccakf2.Xuint8, x keccakf2.Xuint64) []keccakf2.Xuint8 {
-	var res [8]keccakf2.Xuint8
-	for i, v := range res {
-		for j := range v {
-			res[i][j] = 0
-		}
-	}
-
-	byteIdx := 0
-	for i := 0; i < len(res); i++ {
-		for j := range res[i] {
-			//log.Printf("64idx=%v,8btidx=%v,btidx=%v\n\n", byteIdx, i, j)
-			res[i][j] = x[byteIdx]
-			byteIdx += 1
-		}
-	}
-
-	xuint8s := append(b, res[0], res[1], res[2], res[3], res[4], res[5], res[6], res[7])
-	return xuint8s
 }

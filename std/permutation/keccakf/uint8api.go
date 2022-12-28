@@ -74,3 +74,40 @@ func (w *Uint8api) assertEq(a, b Xuint8) {
 		w.api.AssertIsEqual(a[i], b[i])
 	}
 }
+
+func DecodeToXuint64(b []Xuint8) Xuint64 {
+	var res Xuint64
+	for i := range res {
+		res[i] = 0
+	}
+	d := b[:8]
+	for i := len(res) - 1; i >= 0; {
+		for _, v := range d {
+			for z := range v {
+				res[i] = v[len(d)-1-z]
+				i -= 1
+			}
+		}
+	}
+	return res
+}
+
+func EncodeToXuint8(b []Xuint8, x Xuint64) []Xuint8 {
+	var res [8]Xuint8
+	for i, v := range res {
+		for j := range v {
+			res[i][j] = 0
+		}
+	}
+
+	byteIdx := 0
+	for i := 0; i < len(res); i++ {
+		for j := range res[i] {
+			//log.Printf("64idx=%v,8btidx=%v,btidx=%v\n\n", byteIdx, i, j)
+			res[i][j] = x[byteIdx]
+			byteIdx += 1
+		}
+	}
+
+	return append(b, res[0], res[1], res[2], res[3], res[4], res[5], res[6], res[7])
+}
