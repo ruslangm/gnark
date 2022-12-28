@@ -1,7 +1,6 @@
 package keccak
 
 import (
-	"fmt"
 	"github.com/consensys/gnark/frontend"
 	keccakf2 "github.com/consensys/gnark/std/permutation/keccakf"
 )
@@ -57,10 +56,10 @@ func (h *Keccak256) Write(data ...frontend.Variable) {
 		in[i] = h.uapi8.AsUint8(data[i])
 	}
 
-	for len(data) > 0 {
+	for len(in) > 0 {
 		n := copy(h.buf[h.len:bs], in)
 		h.len += n
-		data = data[n:]
+		in = in[n:]
 		/* for every block Pi in P */
 		if h.len == bs {
 			h.flush()
@@ -77,7 +76,6 @@ func (h *Keccak256) flush() {
 		/* S[x, y] = S[x, y] ⊕ Pi[x + 5y],   ∀(x, y) such that x + 5y < r/w */
 		piUint64 := h.decodeToXuint64(b)
 		h.a[i] = h.uapi64.Xor(h.a[i], piUint64)
-		fmt.Printf("Updated value of h.a[%v] with b=%v\n", i, piUint64)
 		b = b[8:]
 	}
 	h.a = h.keccakf()
@@ -99,12 +97,12 @@ func (h *Keccak256) keccakf() [25]keccakf2.Xuint64 {
 
 func (h *Keccak256) Sum(data ...frontend.Variable) []frontend.Variable {
 	d := *h
-	d.buf[d.len] = h.uapi8.AsUint8(0x01)
+	d.buf[d.len] = keccakf2.ConstUint8(0x01)
 	bs := d.BlockSize()
 	for i := d.len + 1; i < bs; i++ {
-		d.buf[i] = h.uapi8.AsUint8(0x00)
+		d.buf[i] = keccakf2.ConstUint8(0x00)
 	}
-	d.buf[bs-1] = h.uapi8.Or(d.buf[bs-1], h.uapi8.AsUint8(0x80))
+	d.buf[bs-1] = h.uapi8.Or(d.buf[bs-1], keccakf2.ConstUint8(0x80))
 	d.len = bs
 
 	d.flush()
@@ -126,9 +124,13 @@ func (h *Keccak256) decodeToXuint64(b []keccakf2.Xuint8) keccakf2.Xuint64 {
 	for i := range res {
 		res[i] = 0
 	}
-	for i := len(res) - 1; i >= 0; i -= len(b) {
-		for j := range b {
-			res[i] = h.uapi8.FromUint8(b[len(b)-j-1])
+	d := b[:8]
+	for i := len(res) - 1; i >= 0; {
+		for _, v := range d {
+			for z := range v {
+				res[i] = v[len(d)-1-z]
+				i -= 1
+			}
 		}
 	}
 	return res
@@ -142,11 +144,15 @@ func (h *Keccak256) encodeToXuint8(b []keccakf2.Xuint8, x keccakf2.Xuint64) []ke
 		}
 	}
 
-	for i, v := range res {
-		for j := range v {
-			res[i][j] = x[i+j]
+	byteIdx := 0
+	for i := 0; i < len(res); i++ {
+		for j := range res[i] {
+			//log.Printf("64idx=%v,8btidx=%v,btidx=%v\n\n", byteIdx, i, j)
+			res[i][j] = x[byteIdx]
+			byteIdx += 1
 		}
 	}
 
-	return append(b, res[0], res[1], res[2], res[3], res[4], res[5], res[6], res[7])
+	xuint8s := append(b, res[0], res[1], res[2], res[3], res[4], res[5], res[6], res[7])
+	return xuint8s
 }

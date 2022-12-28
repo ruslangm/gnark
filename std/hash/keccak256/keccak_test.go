@@ -1,7 +1,6 @@
 package keccak
 
 import (
-	"bytes"
 	"github.com/consensys/gnark-crypto/ecc"
 	"github.com/consensys/gnark/backend"
 	"github.com/consensys/gnark/frontend"
@@ -12,7 +11,7 @@ import (
 )
 
 type keccak256Circuit struct {
-	ExpectedResult [32]frontend.Variable `gnark:"data,public"`
+	ExpectedResult [32]frontend.Variable
 	Data           [32]frontend.Variable
 }
 
@@ -28,25 +27,23 @@ func (circuit keccak256Circuit) Define(api frontend.API) error {
 }
 
 func TestKeccak256(t *testing.T) {
-	var buf bytes.Buffer
 	seed := new(big.Int).SetInt64(10000)
 	seedBytes := seed.FillBytes(make([]byte, 32))
-	buf.Write(seedBytes)
-	assert := test.NewAssert(t)
 
 	hash := sha3.NewLegacyKeccak256()
-	_, _ = hash.Write(buf.Bytes())
+	_, _ = hash.Write(seedBytes)
 	val := hash.Sum(nil)
 
 	var circuit, witness keccak256Circuit
-	for i := range val {
-		witness.ExpectedResult[i] = val[i]
-	}
 	witness.Data = [32]frontend.Variable{}
 	for i := range seedBytes {
 		witness.Data[i] = seedBytes[i]
 	}
+	for i := range val {
+		witness.ExpectedResult[i] = val[i]
+	}
 
+	assert := test.NewAssert(t)
 	assert.SolvingSucceeded(
 		&circuit,
 		&witness,
