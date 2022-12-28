@@ -1,8 +1,8 @@
 package keccak
 
 import (
+	"fmt"
 	"github.com/consensys/gnark/frontend"
-	"github.com/consensys/gnark/std/math/bits"
 	keccakf2 "github.com/consensys/gnark/std/permutation/keccakf"
 )
 
@@ -11,14 +11,16 @@ const Size = 256 / 8
 const BlockSize = 1600/8 - Size*2
 
 // Keccak256 implements hash.Hash
+// variable == single byte
 type Keccak256 struct {
 	a      [25]keccakf2.Xuint64
-	buf    [200]keccakf2.Xuint64
-	dsbyte keccakf2.Xuint64
+	buf    [200]keccakf2.Xuint8
+	dsbyte keccakf2.Xuint8
 	len    int
 	size   int
 	api    frontend.API
-	uapi   *keccakf2.Uint64api
+	uapi64 *keccakf2.Uint64api
+	uapi8  *keccakf2.Uint8api
 }
 
 func (h *Keccak256) Api() frontend.API {
@@ -27,10 +29,11 @@ func (h *Keccak256) Api() frontend.API {
 
 func NewKeccak256(api frontend.API) Keccak256 {
 	return Keccak256{
-		dsbyte: keccakf2.ConstUint64(0x0000000000000001),
+		dsbyte: keccakf2.ConstUint8(0x01),
 		size:   256 / 8,
 		api:    api,
-		uapi:   keccakf2.NewUint64API(api),
+		uapi64: keccakf2.NewUint64API(api),
+		uapi8:  keccakf2.NewUint8API(api),
 	}
 }
 
@@ -39,16 +42,19 @@ func (h *Keccak256) BlockSize() int { return BlockSize }
 
 func (h *Keccak256) Reset() {
 	h.a = [25]keccakf2.Xuint64{}
-	h.buf = [200]keccakf2.Xuint64{}
+	for i := range h.a {
+		h.a[i] = keccakf2.ConstUint64(0)
+	}
+	h.buf = [200]keccakf2.Xuint8{}
 	h.len = 0
 }
 
 func (h *Keccak256) Write(data ...frontend.Variable) {
 	bs := h.BlockSize()
 
-	var in []keccakf2.Xuint64
+	in := make([]keccakf2.Xuint8, len(data))
 	for i := range data {
-		in[i] = h.uapi.AsUint64(data[i])
+		in[i] = h.uapi8.AsUint8(data[i])
 	}
 
 	for len(data) > 0 {
@@ -57,20 +63,21 @@ func (h *Keccak256) Write(data ...frontend.Variable) {
 		data = data[n:]
 		/* for every block Pi in P */
 		if h.len == bs {
-			h.flush(in)
+			h.flush()
 		}
 	}
 }
 
-func (h *Keccak256) flush(b []keccakf2.Xuint64) {
-	b = h.buf[:h.len]
-	uapi := keccakf2.NewUint64API(h.api)
+func (h *Keccak256) flush() {
+	b := h.buf[:h.len]
 	for i := range h.a {
 		if len(b) == 0 {
 			break
 		}
 		/* S[x, y] = S[x, y] ⊕ Pi[x + 5y],   ∀(x, y) such that x + 5y < r/w */
-		h.a[i] = uapi.Xor(uapi.AsUint64(h.a[i]), h.le64dec(b))
+		piUint64 := h.decodeToXuint64(b)
+		h.a[i] = h.uapi64.Xor(h.a[i], piUint64)
+		fmt.Printf("Updated value of h.a[%v] with b=%v\n", i, piUint64)
 		b = b[8:]
 	}
 	h.keccakf()
@@ -80,34 +87,61 @@ func (h *Keccak256) flush(b []keccakf2.Xuint64) {
 func (h *Keccak256) keccakf() {
 	in := [25]frontend.Variable{}
 	for i := range h.a {
-		in[i] = h.uapi.FromUint64(h.a[i])
+		in[i] = h.uapi64.FromUint64(h.a[i])
 	}
 	keccakf2.Permute(h.api, in)
 }
 
 func (h *Keccak256) Sum(data ...frontend.Variable) []frontend.Variable {
 	d := *h
-	d.buf[d.len] = d.dsbyte
+	d.buf[d.len] = h.uapi8.AsUint8(0x01)
 	bs := d.BlockSize()
 	for i := d.len + 1; i < bs; i++ {
-		d.buf[i] = keccakf2.ConstUint64(0)
+		d.buf[i] = h.uapi8.AsUint8(0x00)
 	}
-	uapi := keccakf2.NewUint64API(h.api)
-	uapi.And(d.buf[bs-1], keccakf2.ConstUint64(0x80))
+	d.buf[bs-1] = h.uapi8.Or(d.buf[bs-1], h.uapi8.AsUint8(0x80))
 	d.len = bs
 
-	d.flush(d.buf[:])
+	d.flush()
 
+	var res []keccakf2.Xuint8
 	for i := 0; i < d.size/8; i++ {
-		data = h.le64enc(data, d.a[i])
+		res = h.encodeToXuint8(res, d.a[i])
 	}
-	return data
+
+	r := make([]frontend.Variable, len(res))
+	for i := range res {
+		r[i] = h.uapi8.FromUint8(res[i])
+	}
+	return r
 }
 
-func (h *Keccak256) le64dec(b []keccakf2.Xuint64) keccakf2.Xuint64 {
-	return h.uapi.AsUint64FromBytes(b[0:8])
+func (h *Keccak256) decodeToXuint64(b []keccakf2.Xuint8) keccakf2.Xuint64 {
+	var res keccakf2.Xuint64
+	for i := range res {
+		res[i] = 0
+	}
+	for i := len(res) - 1; i >= 0; i -= len(b) {
+		for j := range b {
+			res[i] = h.uapi8.FromUint8(b[len(b)-j-1])
+		}
+	}
+	return res
 }
 
-func (h *Keccak256) le64enc(b []frontend.Variable, x keccakf2.Xuint64) []frontend.Variable {
-	return append(b, bits.ToBinary(h.api, x, bits.WithNbDigits(64)))
+func (h *Keccak256) encodeToXuint8(b []keccakf2.Xuint8, x keccakf2.Xuint64) []keccakf2.Xuint8 {
+	var res [8]keccakf2.Xuint8
+	for i, v := range res {
+		for j := range v {
+			res[i][j] = 0
+		}
+	}
+
+	for i, v := range res {
+		for j := range v {
+			res[i][j] = x[i+j]
+		}
+	}
+
+	return append(b, res[0], res[1], res[2], res[3], res[4], res[5], res[6], res[7])
 }

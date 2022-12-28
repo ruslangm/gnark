@@ -76,7 +76,7 @@ func permute(api frontend.API, st [25]Xuint64) [25]Xuint64 {
 			bc[i] = uapi.Xor(st[i], st[i+5], st[i+10], st[i+15], st[i+20])
 		}
 		for i := 0; i < 5; i++ {
-			t = uapi.Xor(bc[(i+4)%5], uapi.lrot(bc[(i+1)%5], 1))
+			t = uapi.Xor(bc[(i+4)%5], uapi.Lrot(bc[(i+1)%5], 1))
 			for j := 0; j < 25; j += 5 {
 				st[j+i] = uapi.Xor(st[j+i], t)
 			}
@@ -86,7 +86,7 @@ func permute(api frontend.API, st [25]Xuint64) [25]Xuint64 {
 		for i := 0; i < 24; i++ {
 			j := piln[i]
 			bc[0] = st[j]
-			st[j] = uapi.lrot(t, rotc[i])
+			st[j] = uapi.Lrot(t, rotc[i])
 			t = bc[0]
 		}
 
