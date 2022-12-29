@@ -74,7 +74,7 @@ func (h *Keccak256) flush() {
 			break
 		}
 		/* S[x, y] = S[x, y] ⊕ Pi[x + 5y],   ∀(x, y) such that x + 5y < r/w */
-		piUint64 := keccakf2.DecodeToXuint64(b)
+		piUint64 := h.uapi8.DecodeToXuint64(b, *h.uapi64)
 		h.a[i] = h.uapi64.Xor(h.a[i], piUint64)
 		b = b[8:]
 	}
@@ -109,7 +109,7 @@ func (h *Keccak256) Sum(data ...frontend.Variable) []frontend.Variable {
 
 	var res []keccakf2.Xuint8
 	for i := 0; i < d.size/8; i++ {
-		res = keccakf2.EncodeToXuint8(res, d.a[i])
+		res = h.uapi8.EncodeToXuint8(res, d.a[i])
 	}
 
 	r := make([]frontend.Variable, len(res))

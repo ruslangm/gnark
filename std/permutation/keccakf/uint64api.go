@@ -64,6 +64,19 @@ func (w *Uint64api) And(in ...Xuint64) Xuint64 {
 	return res
 }
 
+func (w *Uint64api) Or(in ...Xuint64) Xuint64 {
+	var res Xuint64
+	for i := range res {
+		res[i] = 0
+	}
+	for i := range res {
+		for _, v := range in {
+			res[i] = w.api.Or(res[i], v[i])
+		}
+	}
+	return res
+}
+
 func (w *Uint64api) Xor(in ...Xuint64) Xuint64 {
 	var res Xuint64
 	for i := range res {

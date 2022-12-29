@@ -22,8 +22,8 @@ type orUint8Circ struct {
 }
 
 type uint8ToUint64Circ struct {
-	In  []frontend.Variable
-	Out frontend.Variable
+	In  [8]frontend.Variable
+	Out frontend.Variable `gnark:",public"`
 }
 
 func (c *andUint8Circ) Define(api frontend.API) error {
@@ -54,7 +54,7 @@ func (c uint8ToUint64Circ) Define(api frontend.API) error {
 	for i, v := range c.In {
 		in[i] = uapi.AsUint8(v)
 	}
-	res := DecodeToXuint64(in)
+	res := uapi.DecodeToXuint64(in, *uapi64)
 
 	out := uapi64.AsUint64(c.Out)
 	uapi64.assertEq(out, res)
@@ -63,24 +63,26 @@ func (c uint8ToUint64Circ) Define(api frontend.API) error {
 
 func TestAndOperation(t *testing.T) {
 	assert := test.NewAssert(t)
-	assert.ProverSucceeded(&andUint8Circ{In1: 2, In2: 6, Out: 2}, &andUint8Circ{In1: 2, In2: 6, Out: 2})
+	circuit := &andUint8Circ{Out: 2}
+	witness := &andUint8Circ{In1: 2, In2: 6, Out: 2}
+	assert.ProverSucceeded(circuit, witness, test.WithBackends(backend.GROTH16), test.WithCurves(ecc.BN254))
 }
 
 func TestOrOperation(t *testing.T) {
 	assert := test.NewAssert(t)
-	assert.ProverSucceeded(&orUint8Circ{In1: 2, In2: 6, Out: 6}, &orUint8Circ{In1: 2, In2: 6, Out: 6})
+	circuit := &orUint8Circ{Out: 6}
+	witness := &orUint8Circ{In1: 2, In2: 6, Out: 6}
+	assert.ProverSucceeded(circuit, witness, test.WithBackends(backend.GROTH16), test.WithCurves(ecc.BN254))
 }
 
 func TestDecodeUint8ToUint64Operation(t *testing.T) {
-	assert := test.NewAssert(t)
 	in := []frontend.Variable{8, 7, 6, 5, 4, 3, 2, 1}
+	witness := uint8ToUint64Circ{}
+	for i := range in {
+		witness.In[i] = in[i]
+	}
+	witness.Out = 72623859790382856
 
-	var circuit, witness uint8ToUint64Circ
-	witness.In = in
-	witness.Out = 15
-	assert.SolvingSucceeded(
-		&circuit,
-		&witness,
-		test.WithBackends(backend.GROTH16),
-		test.WithCurves(ecc.BN254))
+	assert := test.NewAssert(t)
+	assert.SolvingSucceeded(&uint8ToUint64Circ{}, &witness, test.WithBackends(backend.GROTH16), test.WithCurves(ecc.BN254))
 }
