@@ -16,8 +16,8 @@ func NewUint8API(api frontend.API) *Uint8api {
 	}
 }
 
-// varUint64 represents 64-bit unsigned integer. We use this type to ensure that
-// we work over constrained bits. Do not initialize directly, use [wideBinaryOpsApi.asUint64].
+// Xuint8 represents 8-bit byte. We use this type to ensure that
+// we work over constrained bits.
 type Xuint8 [8]frontend.Variable
 
 func ConstUint8(a uint8) Xuint8 {
