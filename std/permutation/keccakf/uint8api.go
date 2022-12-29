@@ -75,39 +75,32 @@ func (w *Uint8api) assertEq(a, b Xuint8) {
 	}
 }
 
-func DecodeToXuint64(b []Xuint8) Xuint64 {
+func (w *Uint8api) DecodeToXuint64(b []Xuint8, api Uint64api) Xuint64 {
 	var res Xuint64
 	for i := range res {
 		res[i] = 0
 	}
-	d := b[:8]
-	for i := len(res) - 1; i >= 0; {
-		for _, v := range d {
-			for z := range v {
-				res[i] = v[len(d)-1-z]
-				i -= 1
-			}
-		}
-	}
-	return res
+	return api.Or(
+		api.Lrot(api.AsUint64(w.FromUint8(b[0])), 0),
+		api.Lrot(api.AsUint64(w.FromUint8(b[1])), 8),
+		api.Lrot(api.AsUint64(w.FromUint8(b[2])), 16),
+		api.Lrot(api.AsUint64(w.FromUint8(b[3])), 24),
+		api.Lrot(api.AsUint64(w.FromUint8(b[4])), 32),
+		api.Lrot(api.AsUint64(w.FromUint8(b[5])), 40),
+		api.Lrot(api.AsUint64(w.FromUint8(b[6])), 48),
+		api.Lrot(api.AsUint64(w.FromUint8(b[7])), 56),
+	)
 }
 
-func EncodeToXuint8(b []Xuint8, x Xuint64) []Xuint8 {
+func (w *Uint8api) EncodeToXuint8(b []Xuint8, x Xuint64) []Xuint8 {
 	var res [8]Xuint8
-	for i, v := range res {
-		for j := range v {
-			res[i][j] = 0
-		}
-	}
-
-	byteIdx := 0
-	for i := 0; i < len(res); i++ {
-		for j := range res[i] {
-			//log.Printf("64idx=%v,8btidx=%v,btidx=%v\n\n", byteIdx, i, j)
-			res[i][j] = x[byteIdx]
-			byteIdx += 1
-		}
-	}
-
+	copy(res[0][:], x[0:8])
+	copy(res[1][:], x[8:16])
+	copy(res[2][:], x[16:24])
+	copy(res[3][:], x[24:32])
+	copy(res[4][:], x[32:40])
+	copy(res[5][:], x[40:48])
+	copy(res[6][:], x[48:56])
+	copy(res[7][:], x[56:64])
 	return append(b, res[0], res[1], res[2], res[3], res[4], res[5], res[6], res[7])
 }

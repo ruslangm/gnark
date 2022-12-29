@@ -27,7 +27,7 @@ func (circuit keccak256Circuit) Define(api frontend.API) error {
 }
 
 func TestKeccak256(t *testing.T) {
-	seed := new(big.Int).SetInt64(10000)
+	seed := new(big.Int).SetInt64(123456)
 	seedBytes := seed.FillBytes(make([]byte, 32))
 
 	hash := sha3.NewLegacyKeccak256()
