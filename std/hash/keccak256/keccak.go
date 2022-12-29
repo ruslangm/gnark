@@ -112,7 +112,7 @@ func (h *Keccak256) Sum(data ...frontend.Variable) []frontend.Variable {
 		res = h.uapi8.EncodeToXuint8(res, d.a[i])
 	}
 
-	r := make([]frontend.Variable, len(d.a))
+	r := make([]frontend.Variable, len(res))
 	for i := range res {
 		r[i] = h.uapi8.FromUint8(res[i])
 	}
