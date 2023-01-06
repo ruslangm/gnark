@@ -5,14 +5,17 @@ import (
 	"github.com/consensys/gnark/backend"
 	"github.com/consensys/gnark/frontend"
 	"github.com/consensys/gnark/test"
-	"golang.org/x/crypto/sha3"
-	"math/big"
 	"testing"
 )
 
 type keccak256Circuit struct {
 	ExpectedResult [32]frontend.Variable
-	Data           [32]frontend.Variable
+	Data           []frontend.Variable
+}
+
+type testcase struct {
+	msg    []byte
+	output []byte
 }
 
 func (circuit keccak256Circuit) Define(api frontend.API) error {
@@ -26,28 +29,26 @@ func (circuit keccak256Circuit) Define(api frontend.API) error {
 	return nil
 }
 
-func TestKeccak256(t *testing.T) {
-	seed := new(big.Int).SetInt64(123456)
-	seedBytes := seed.FillBytes(make([]byte, 32))
-
-	hash := sha3.NewLegacyKeccak256()
-	_, _ = hash.Write(seedBytes)
-	val := hash.Sum(nil)
-
+func TestKeccakShort256(t *testing.T) {
 	var circuit, witness keccak256Circuit
-	witness.Data = [32]frontend.Variable{}
-	for i := range seedBytes {
-		witness.Data[i] = seedBytes[i]
-	}
-	for i := range val {
-		witness.ExpectedResult[i] = val[i]
-	}
+	for i := range tstShort {
+		seed := tstShort[i].msg
+		output := tstShort[i].output
+		circuit.Data = make([]frontend.Variable, len(seed))
+		witness.Data = make([]frontend.Variable, len(seed))
+		for j := range seed {
+			witness.Data[j] = seed[j]
+		}
+		for j := range output {
+			witness.ExpectedResult[j] = output[j]
+		}
 
-	assert := test.NewAssert(t)
-	assert.SolvingSucceeded(
-		&circuit,
-		&witness,
-		test.WithBackends(backend.GROTH16),
-		test.WithCurves(ecc.BN254),
-	)
+		assert := test.NewAssert(t)
+		assert.SolvingSucceeded(
+			&circuit,
+			&witness,
+			test.WithBackends(backend.GROTH16),
+			test.WithCurves(ecc.BN254),
+		)
+	}
 }
