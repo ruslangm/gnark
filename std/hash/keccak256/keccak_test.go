@@ -1,10 +1,12 @@
 package keccak
 
 import (
+	"bytes"
 	"github.com/consensys/gnark-crypto/ecc"
 	"github.com/consensys/gnark/backend"
 	"github.com/consensys/gnark/frontend"
 	"github.com/consensys/gnark/test"
+	"github.com/ethereum/go-ethereum/crypto"
 	"testing"
 )
 
@@ -29,11 +31,47 @@ func (circuit keccak256Circuit) Define(api frontend.API) error {
 	return nil
 }
 
-func TestKeccakShort256(t *testing.T) {
+func TestKeccak256Short(t *testing.T) {
 	var circuit, witness keccak256Circuit
-	for i := range tstShort {
-		seed := tstShort[i].msg
-		output := tstShort[i].output
+	for i := range testCaseShort {
+		seed := testCaseShort[i].msg
+		output := testCaseShort[i].output
+		outputCryptoEth := crypto.Keccak256Hash(seed).Bytes()
+
+		if !bytes.Equal(output, outputCryptoEth) {
+			t.Errorf("Keccak256 testcase Short %d: expected %x got %x", i, testCaseShort[i].output, outputCryptoEth)
+		}
+
+		circuit.Data = make([]frontend.Variable, len(seed))
+		witness.Data = make([]frontend.Variable, len(seed))
+		for j := range seed {
+			witness.Data[j] = seed[j]
+		}
+		for j := range output {
+			witness.ExpectedResult[j] = output[j]
+		}
+
+		assert := test.NewAssert(t)
+		assert.SolvingSucceeded(
+			&circuit,
+			&witness,
+			test.WithBackends(backend.GROTH16),
+			test.WithCurves(ecc.BN254),
+		)
+	}
+}
+
+func TestKeccak256Long(t *testing.T) {
+	var circuit, witness keccak256Circuit
+	for i := range testCaseLong {
+		seed := testCaseLong[i].msg
+		output := testCaseLong[i].output
+		outputCryptoEth := crypto.Keccak256Hash(seed).Bytes()
+
+		if !bytes.Equal(output, outputCryptoEth) {
+			t.Errorf("Keccak256 testcase Long %d: expected %x got %x", i, testCaseLong[i].output, outputCryptoEth)
+		}
+
 		circuit.Data = make([]frontend.Variable, len(seed))
 		witness.Data = make([]frontend.Variable, len(seed))
 		for j := range seed {
