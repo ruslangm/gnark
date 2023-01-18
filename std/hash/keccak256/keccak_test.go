@@ -2,16 +2,18 @@ package keccak
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/consensys/gnark-crypto/ecc"
 	"github.com/consensys/gnark/backend"
 	"github.com/consensys/gnark/frontend"
 	"github.com/consensys/gnark/test"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"testing"
 )
 
 type keccak256Circuit struct {
-	ExpectedResult [32]frontend.Variable
+	ExpectedResult frontend.Variable
 	Data           []frontend.Variable
 }
 
@@ -21,14 +23,31 @@ type testcase struct {
 }
 
 func (circuit keccak256Circuit) Define(api frontend.API) error {
-	keccak256 := NewKeccak256(api)
-	keccak256.Reset()
-	keccak256.Write(circuit.Data[:]...)
-	result := keccak256.Sum(nil)
-	for i := range result {
-		api.AssertIsEqual(result[i], circuit.ExpectedResult[i])
-	}
+	keccakHash := Keccak256Api(api, circuit.Data[:]...)
+	api.AssertIsEqual(keccakHash, circuit.ExpectedResult)
 	return nil
+}
+
+func TestKeccak256(t *testing.T) {
+	var circuit, witness keccak256Circuit
+	seed := "abc"
+	output := crypto.Keccak256Hash([]byte(seed)).Bytes()
+
+	circuit.Data = make([]frontend.Variable, len(seed))
+	witness.Data = make([]frontend.Variable, len(seed))
+	for j := range seed {
+		witness.Data[j] = seed[j]
+	}
+	fmt.Println(common.Bytes2Hex(output))
+	witness.ExpectedResult = output
+
+	assert := test.NewAssert(t)
+	assert.SolvingSucceeded(
+		&circuit,
+		&witness,
+		test.WithBackends(backend.GROTH16),
+		test.WithCurves(ecc.BN254),
+	)
 }
 
 func TestKeccak256Short(t *testing.T) {
@@ -47,9 +66,7 @@ func TestKeccak256Short(t *testing.T) {
 		for j := range seed {
 			witness.Data[j] = seed[j]
 		}
-		for j := range output {
-			witness.ExpectedResult[j] = output[j]
-		}
+		witness.ExpectedResult = output
 
 		assert := test.NewAssert(t)
 		assert.SolvingSucceeded(
@@ -77,9 +94,7 @@ func TestKeccak256Long(t *testing.T) {
 		for j := range seed {
 			witness.Data[j] = seed[j]
 		}
-		for j := range output {
-			witness.ExpectedResult[j] = output[j]
-		}
+		witness.ExpectedResult = output
 
 		assert := test.NewAssert(t)
 		assert.SolvingSucceeded(

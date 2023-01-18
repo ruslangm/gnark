@@ -26,7 +26,20 @@ func (h *Keccak256) Api() frontend.API {
 	return h.api
 }
 
-func NewKeccak256(api frontend.API) Keccak256 {
+func Keccak256Api(api frontend.API, data ...frontend.Variable) (res frontend.Variable) {
+	keccak256 := newKeccak256(api)
+	keccak256.Reset()
+	keccak256.Write(data[:]...)
+	keccakBytes := keccak256.Sum(nil)
+	var keccakBits []frontend.Variable
+	for i := len(keccakBytes) - 1; i >= 0; i-- {
+		v := api.ToBinary(keccakBytes[i], 8)
+		keccakBits = append(keccakBits, v[:]...)
+	}
+	return api.FromBinary(keccakBits[:]...)
+}
+
+func newKeccak256(api frontend.API) Keccak256 {
 	return Keccak256{
 		dsbyte: keccakf2.ConstUint8(0x01),
 		size:   256 / 8,
