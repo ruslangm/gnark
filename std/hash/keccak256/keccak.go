@@ -26,7 +26,20 @@ func (h *Keccak256) Api() frontend.API {
 	return h.api
 }
 
-func NewKeccak256(api frontend.API) Keccak256 {
+func Keccak256Api(api frontend.API, data ...frontend.Variable) (res frontend.Variable) {
+	keccak256 := newKeccak256(api)
+	keccak256.Reset()
+	keccak256.Write(data[:]...)
+	keccakBytes := keccak256.Sum(nil)
+	var keccakBits []frontend.Variable
+	for i := len(keccakBytes) - 1; i >= 0; i-- {
+		v := api.ToBinary(keccakBytes[i], 8)
+		keccakBits = append(keccakBits, v[:]...)
+	}
+	return api.FromBinary(keccakBits[:]...)
+}
+
+func newKeccak256(api frontend.API) Keccak256 {
 	return Keccak256{
 		dsbyte: keccakf2.ConstUint8(0x01),
 		size:   256 / 8,
@@ -73,9 +86,9 @@ func (h *Keccak256) flush() {
 		if len(b) == 0 {
 			break
 		}
+		pi := h.uapi8.DecodeToXuint64(b, *h.uapi64)
 		/* S[x, y] = S[x, y] ⊕ Pi[x + 5y],   ∀(x, y) such that x + 5y < r/w */
-		piUint64 := h.uapi8.DecodeToXuint64(b, *h.uapi64)
-		h.a[i] = h.uapi64.Xor(h.a[i], piUint64)
+		h.a[i] = h.uapi64.Xor(h.a[i], pi)
 		b = b[8:]
 	}
 	h.a = h.keccakf()
@@ -83,16 +96,7 @@ func (h *Keccak256) flush() {
 }
 
 func (h *Keccak256) keccakf() [25]keccakf2.Xuint64 {
-	in := [25]frontend.Variable{}
-	for i := range h.a {
-		in[i] = h.uapi64.FromUint64(h.a[i])
-	}
-	keccakf := keccakf2.Permute(h.api, in)
-	res := [25]keccakf2.Xuint64{}
-	for i := range keccakf {
-		res[i] = h.uapi64.AsUint64(keccakf[i])
-	}
-	return res
+	return keccakf2.Permute(h.api, h.a)
 }
 
 func (h *Keccak256) Sum(data ...frontend.Variable) []frontend.Variable {

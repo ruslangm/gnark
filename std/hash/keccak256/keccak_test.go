@@ -1,47 +1,46 @@
 package keccak
 
 import (
+	"bytes"
+	"fmt"
 	"github.com/consensys/gnark-crypto/ecc"
 	"github.com/consensys/gnark/backend"
 	"github.com/consensys/gnark/frontend"
 	"github.com/consensys/gnark/test"
-	"golang.org/x/crypto/sha3"
-	"math/big"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 	"testing"
+	"time"
 )
 
 type keccak256Circuit struct {
-	ExpectedResult [32]frontend.Variable
-	Data           [32]frontend.Variable
+	ExpectedResult frontend.Variable
+	Data           []frontend.Variable
+}
+
+type testcase struct {
+	msg    []byte
+	output []byte
 }
 
 func (circuit keccak256Circuit) Define(api frontend.API) error {
-	keccak256 := NewKeccak256(api)
-	keccak256.Reset()
-	keccak256.Write(circuit.Data[:]...)
-	result := keccak256.Sum(nil)
-	for i := range result {
-		api.AssertIsEqual(result[i], circuit.ExpectedResult[i])
-	}
+	keccakHash := Keccak256Api(api, circuit.Data[:]...)
+	api.AssertIsEqual(keccakHash, circuit.ExpectedResult)
 	return nil
 }
 
 func TestKeccak256(t *testing.T) {
-	seed := new(big.Int).SetInt64(123456)
-	seedBytes := seed.FillBytes(make([]byte, 32))
-
-	hash := sha3.NewLegacyKeccak256()
-	_, _ = hash.Write(seedBytes)
-	val := hash.Sum(nil)
-
 	var circuit, witness keccak256Circuit
-	witness.Data = [32]frontend.Variable{}
-	for i := range seedBytes {
-		witness.Data[i] = seedBytes[i]
+	seed := "abc"
+	output := crypto.Keccak256Hash([]byte(seed)).Bytes()
+
+	circuit.Data = make([]frontend.Variable, len(seed))
+	witness.Data = make([]frontend.Variable, len(seed))
+	for j := range seed {
+		witness.Data[j] = seed[j]
 	}
-	for i := range val {
-		witness.ExpectedResult[i] = val[i]
-	}
+	fmt.Println(common.Bytes2Hex(output))
+	witness.ExpectedResult = output
 
 	assert := test.NewAssert(t)
 	assert.SolvingSucceeded(
@@ -50,4 +49,62 @@ func TestKeccak256(t *testing.T) {
 		test.WithBackends(backend.GROTH16),
 		test.WithCurves(ecc.BN254),
 	)
+}
+
+func TestKeccak256Short(t *testing.T) {
+	var circuit, witness keccak256Circuit
+	for i := range testCaseShort {
+		seed := testCaseShort[i].msg
+		output := testCaseShort[i].output
+		outputCryptoEth := crypto.Keccak256Hash(seed).Bytes()
+
+		if !bytes.Equal(output, outputCryptoEth) {
+			t.Errorf("Keccak256 testcase Short %d: expected %x got %x", i, testCaseShort[i].output, outputCryptoEth)
+		}
+
+		circuit.Data = make([]frontend.Variable, len(seed))
+		witness.Data = make([]frontend.Variable, len(seed))
+		for j := range seed {
+			witness.Data[j] = seed[j]
+		}
+		witness.ExpectedResult = output
+
+		assert := test.NewAssert(t)
+		assert.SolvingSucceeded(
+			&circuit,
+			&witness,
+			test.WithBackends(backend.GROTH16),
+			test.WithCurves(ecc.BN254),
+		)
+	}
+}
+
+func TestKeccak256Long(t *testing.T) {
+	var circuit, witness keccak256Circuit
+	for i := len(testCaseLong) - 1; i >= 0; i-- {
+		start := time.Now()
+		seed := testCaseLong[i].msg
+		output := testCaseLong[i].output
+		outputCryptoEth := crypto.Keccak256Hash(seed).Bytes()
+
+		if !bytes.Equal(output, outputCryptoEth) {
+			t.Errorf("Keccak256 testcase Long %d: expected %x got %x", i, testCaseLong[i].output, outputCryptoEth)
+		}
+
+		circuit.Data = make([]frontend.Variable, len(seed))
+		witness.Data = make([]frontend.Variable, len(seed))
+		for j := range seed {
+			witness.Data[j] = seed[j]
+		}
+		witness.ExpectedResult = output
+
+		assert := test.NewAssert(t)
+		assert.SolvingSucceeded(
+			&circuit,
+			&witness,
+			test.WithBackends(backend.GROTH16),
+			test.WithCurves(ecc.BN254),
+		)
+		fmt.Printf("time passed for i=%v: %v", i, time.Since(start))
+	}
 }
