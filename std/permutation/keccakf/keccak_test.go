@@ -15,7 +15,13 @@ type keccakfCircuit struct {
 }
 
 func (c *keccakfCircuit) Define(api frontend.API) error {
-	res := keccakf.Permute(api, c.In)
+	in := [25]keccakf.Xuint64{}
+	uapi := keccakf.NewUint64API(api)
+	for i := range c.In {
+		in[i] = uapi.AsUint64(c.In[i])
+	}
+
+	res := keccakf.Permute(api, in)
 	for i := range res {
 		api.AssertIsEqual(res[i], c.Expected[i])
 	}

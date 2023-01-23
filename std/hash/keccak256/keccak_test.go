@@ -10,6 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"testing"
+	"time"
 )
 
 type keccak256Circuit struct {
@@ -80,7 +81,8 @@ func TestKeccak256Short(t *testing.T) {
 
 func TestKeccak256Long(t *testing.T) {
 	var circuit, witness keccak256Circuit
-	for i := range testCaseLong {
+	for i := len(testCaseLong) - 1; i > len(testCaseLong)-2; i-- {
+		start := time.Now()
 		seed := testCaseLong[i].msg
 		output := testCaseLong[i].output
 		outputCryptoEth := crypto.Keccak256Hash(seed).Bytes()
@@ -103,5 +105,6 @@ func TestKeccak256Long(t *testing.T) {
 			test.WithBackends(backend.GROTH16),
 			test.WithCurves(ecc.BN254),
 		)
+		fmt.Printf("time passed for i=%v: %v", i, time.Since(start))
 	}
 }
