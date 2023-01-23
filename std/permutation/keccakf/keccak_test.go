@@ -23,7 +23,7 @@ func (c *keccakfCircuit) Define(api frontend.API) error {
 
 	res := keccakf.Permute(api, in)
 	for i := range res {
-		api.AssertIsEqual(res[i], c.Expected[i])
+		api.AssertIsEqual(uapi.FromUint64(res[i]), c.Expected[i])
 	}
 	return nil
 }
