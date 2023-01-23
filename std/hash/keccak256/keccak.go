@@ -96,16 +96,7 @@ func (h *Keccak256) flush() {
 }
 
 func (h *Keccak256) keccakf() [25]keccakf2.Xuint64 {
-	in := [25]frontend.Variable{}
-	for i := range h.a {
-		in[i] = h.uapi64.FromUint64(h.a[i])
-	}
-	keccakf := keccakf2.Permute(h.api, in)
-	res := [25]keccakf2.Xuint64{}
-	for i := range keccakf {
-		res[i] = h.uapi64.AsUint64(keccakf[i])
-	}
-	return res
+	return keccakf2.Permute(h.api, h.a)
 }
 
 func (h *Keccak256) Sum(data ...frontend.Variable) []frontend.Variable {
