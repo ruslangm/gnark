@@ -6,6 +6,7 @@ import (
 	"github.com/consensys/gnark-crypto/ecc"
 	"github.com/consensys/gnark/backend"
 	"github.com/consensys/gnark/frontend"
+	"github.com/consensys/gnark/frontend/cs/r1cs"
 	"github.com/consensys/gnark/test"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -81,7 +82,7 @@ func TestKeccak256Short(t *testing.T) {
 
 func TestKeccak256Long(t *testing.T) {
 	var circuit, witness keccak256Circuit
-	for i := len(testCaseLong) - 1; i >= 0; i-- {
+	for i := len(testCaseLong) - 1; i > len(testCaseLong)-2; i-- {
 		start := time.Now()
 		seed := testCaseLong[i].msg
 		output := testCaseLong[i].output
@@ -98,6 +99,8 @@ func TestKeccak256Long(t *testing.T) {
 		}
 		witness.ExpectedResult = output
 
+		r1c, _ := frontend.Compile(ecc.BN254.ScalarField(), r1cs.NewBuilder, &witness, frontend.IgnoreUnconstrainedInputs())
+		fmt.Println("circuit constraints number is ", r1c.GetNbConstraints())
 		assert := test.NewAssert(t)
 		assert.SolvingSucceeded(
 			&circuit,

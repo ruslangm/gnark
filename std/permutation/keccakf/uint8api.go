@@ -75,21 +75,15 @@ func (w *Uint8api) assertEq(a, b Xuint8) {
 	}
 }
 
-func (w *Uint8api) DecodeToXuint64(b []Xuint8, api Uint64api) Xuint64 {
-	var res Xuint64
-	for i := range res {
-		res[i] = 0
+func (w *Uint8api) DecodeToXuint64(b []Xuint8) Xuint64 {
+	var bits []frontend.Variable
+	for i := 0; i < 8; i++ {
+		bits = append(bits, b[i][:]...)
 	}
-	return api.Or(
-		api.Lrot(api.AsUint64(w.FromUint8(b[0])), 0),
-		api.Lrot(api.AsUint64(w.FromUint8(b[1])), 8),
-		api.Lrot(api.AsUint64(w.FromUint8(b[2])), 16),
-		api.Lrot(api.AsUint64(w.FromUint8(b[3])), 24),
-		api.Lrot(api.AsUint64(w.FromUint8(b[4])), 32),
-		api.Lrot(api.AsUint64(w.FromUint8(b[5])), 40),
-		api.Lrot(api.AsUint64(w.FromUint8(b[6])), 48),
-		api.Lrot(api.AsUint64(w.FromUint8(b[7])), 56),
-	)
+
+	var res Xuint64
+	copy(res[:], bits[:])
+	return res
 }
 
 func (w *Uint8api) EncodeToXuint8(b []Xuint8, x Xuint64) []Xuint8 {
