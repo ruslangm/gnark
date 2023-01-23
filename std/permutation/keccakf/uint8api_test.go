@@ -54,7 +54,7 @@ func (c uint8ToUint64Circ) Define(api frontend.API) error {
 	for i, v := range c.In {
 		in[i] = uapi.AsUint8(v)
 	}
-	res := uapi.DecodeToXuint64(in, *uapi64)
+	res := uapi.DecodeToXuint64(in)
 
 	out := uapi64.AsUint64(c.Out)
 	uapi64.assertEq(out, res)
