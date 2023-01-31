@@ -78,9 +78,7 @@ func TestOrOperation(t *testing.T) {
 func TestDecodeUint8ToUint64Operation(t *testing.T) {
 	in := []frontend.Variable{8, 7, 6, 5, 4, 3, 2, 1}
 	witness := uint8ToUint64Circ{}
-	for i := range in {
-		witness.In[i] = in[i]
-	}
+	copy(witness.In[:], in[:])
 	witness.Out = 72623859790382856
 
 	assert := test.NewAssert(t)
