@@ -9,6 +9,7 @@ import (
 	"github.com/consensys/gnark/test"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	"math/rand"
 	"testing"
 	"time"
 )
@@ -22,6 +23,8 @@ type testcase struct {
 	msg    []byte
 	output []byte
 }
+
+const VectorsNumber = 10
 
 func (circuit keccak256Circuit) Define(api frontend.API) error {
 	keccakHash := Keccak256Api(api, circuit.Data[:]...)
@@ -53,9 +56,13 @@ func TestKeccak256(t *testing.T) {
 
 func TestKeccak256Short(t *testing.T) {
 	var circuit, witness keccak256Circuit
-	for i := range testCaseShort {
-		seed := testCaseShort[i].msg
-		output := testCaseShort[i].output
+	testsNumber := len(testCaseShort)
+
+	for i := 0; i < VectorsNumber; i++ {
+		testCaseIdx := rand.Intn(testsNumber)
+
+		seed := testCaseShort[testCaseIdx].msg
+		output := testCaseShort[testCaseIdx].output
 		outputCryptoEth := crypto.Keccak256Hash(seed).Bytes()
 
 		if !bytes.Equal(output, outputCryptoEth) {
@@ -81,10 +88,14 @@ func TestKeccak256Short(t *testing.T) {
 
 func TestKeccak256Long(t *testing.T) {
 	var circuit, witness keccak256Circuit
-	for i := len(testCaseLong) - 1; i > len(testCaseLong)-2; i-- {
+	testsNumber := len(testCaseLong)
+
+	for i := 0; i < VectorsNumber; i++ {
+		testCaseIdx := rand.Intn(testsNumber)
+
 		start := time.Now()
-		seed := testCaseLong[i].msg
-		output := testCaseLong[i].output
+		seed := testCaseLong[testCaseIdx].msg
+		output := testCaseLong[testCaseIdx].output
 		outputCryptoEth := crypto.Keccak256Hash(seed).Bytes()
 
 		if !bytes.Equal(output, outputCryptoEth) {
@@ -105,6 +116,6 @@ func TestKeccak256Long(t *testing.T) {
 			test.WithBackends(backend.GROTH16),
 			test.WithCurves(ecc.BN254),
 		)
-		fmt.Printf("time passed for i=%v: %v", i, time.Since(start))
+		fmt.Printf("time passed for i=%v, testCase=%v: %v\n", testCaseIdx, i, time.Since(start))
 	}
 }
