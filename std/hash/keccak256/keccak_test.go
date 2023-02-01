@@ -24,7 +24,6 @@ type testcase struct {
 }
 
 const ShortVectorsNumber = 10
-const LongVectorsNumber = 5
 
 func (circuit keccak256Circuit) Define(api frontend.API) error {
 	keccakHash := Keccak256Api(api, circuit.Data[:]...)
