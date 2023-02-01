@@ -1,6 +1,7 @@
 package keccakf_test
 
 import (
+	"github.com/consensys/gnark/backend"
 	"testing"
 
 	"github.com/consensys/gnark-crypto/ecc"
@@ -40,5 +41,5 @@ func TestKeccakf(t *testing.T) {
 		witness.Expected[i] = nativeOut[i]
 	}
 	assert := test.NewAssert(t)
-	assert.ProverSucceeded(&keccakfCircuit{}, &witness, test.WithCurves(ecc.BN254))
+	assert.ProverSucceeded(&keccakfCircuit{}, &witness, test.WithBackends(backend.GROTH16), test.WithCurves(ecc.BN254))
 }
