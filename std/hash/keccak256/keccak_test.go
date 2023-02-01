@@ -11,7 +11,6 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"math/rand"
 	"testing"
-	"time"
 )
 
 type keccak256Circuit struct {
@@ -84,43 +83,5 @@ func TestKeccak256Short(t *testing.T) {
 			test.WithBackends(backend.GROTH16),
 			test.WithCurves(ecc.BN254),
 		)
-	}
-}
-
-func TestKeccak256Long(t *testing.T) {
-
-	// TODO: fix github runners and not skip
-	t.SkipNow()
-
-	var circuit, witness keccak256Circuit
-	testsNumber := len(testCaseLong)
-
-	for i := 0; i < LongVectorsNumber; i++ {
-		testCaseIdx := rand.Intn(testsNumber)
-
-		start := time.Now()
-		seed := testCaseLong[testCaseIdx].msg
-		output := testCaseLong[testCaseIdx].output
-		outputCryptoEth := crypto.Keccak256Hash(seed).Bytes()
-
-		if !bytes.Equal(output, outputCryptoEth) {
-			t.Errorf("Keccak256 testcase Long %d: expected %x got %x", i, testCaseLong[i].output, outputCryptoEth)
-		}
-
-		circuit.Data = make([]frontend.Variable, len(seed))
-		witness.Data = make([]frontend.Variable, len(seed))
-		for j := range seed {
-			witness.Data[j] = seed[j]
-		}
-		witness.ExpectedResult = output
-
-		assert := test.NewAssert(t)
-		assert.SolvingSucceeded(
-			&circuit,
-			&witness,
-			test.WithBackends(backend.GROTH16),
-			test.WithCurves(ecc.BN254),
-		)
-		fmt.Printf("time passed for i=%v, testCase=%v: %v\n", testCaseIdx, i, time.Since(start))
 	}
 }
