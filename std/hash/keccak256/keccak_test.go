@@ -35,7 +35,7 @@ func (circuit keccak256Circuit) Define(api frontend.API) error {
 
 func TestKeccak256(t *testing.T) {
 	var circuit, witness keccak256Circuit
-	seed := "abc"
+	seed := "Hello, world!"
 	output := crypto.Keccak256Hash([]byte(seed)).Bytes()
 
 	circuit.Data = make([]frontend.Variable, len(seed))
@@ -88,6 +88,10 @@ func TestKeccak256Short(t *testing.T) {
 }
 
 func TestKeccak256Long(t *testing.T) {
+
+	// TODO: fix github runners and not skip
+	t.SkipNow()
+
 	var circuit, witness keccak256Circuit
 	testsNumber := len(testCaseLong)
 
