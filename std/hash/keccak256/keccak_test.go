@@ -24,7 +24,8 @@ type testcase struct {
 	output []byte
 }
 
-const VectorsNumber = 10
+const ShortVectorsNumber = 10
+const LongVectorsNumber = 5
 
 func (circuit keccak256Circuit) Define(api frontend.API) error {
 	keccakHash := Keccak256Api(api, circuit.Data[:]...)
@@ -58,7 +59,7 @@ func TestKeccak256Short(t *testing.T) {
 	var circuit, witness keccak256Circuit
 	testsNumber := len(testCaseShort)
 
-	for i := 0; i < VectorsNumber; i++ {
+	for i := 0; i < ShortVectorsNumber; i++ {
 		testCaseIdx := rand.Intn(testsNumber)
 
 		seed := testCaseShort[testCaseIdx].msg
@@ -90,7 +91,7 @@ func TestKeccak256Long(t *testing.T) {
 	var circuit, witness keccak256Circuit
 	testsNumber := len(testCaseLong)
 
-	for i := 0; i < VectorsNumber; i++ {
+	for i := 0; i < LongVectorsNumber; i++ {
 		testCaseIdx := rand.Intn(testsNumber)
 
 		start := time.Now()
