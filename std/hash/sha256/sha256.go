@@ -212,7 +212,7 @@ func padding(in []keccakf.Xuint8, sha Sha256) [][]keccakf.Xuint8 {
 
 	var schedule [][]keccakf.Xuint8
 	for i := 0; i < len(padded)/64; i++ {
-		schedule = append(schedule, padded[i*64:i*64+63])
+		schedule = append(schedule, padded[i*64:i*64+64])
 	}
 	return schedule
 }
