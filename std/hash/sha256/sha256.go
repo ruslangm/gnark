@@ -27,11 +27,6 @@ func Sha256Api(api frontend.API, data ...frontend.Variable) frontend.Variable {
 	uapi32 := sha.uapi32
 	gnark := sha.api
 
-	in := make([]keccakf.Xuint8, len(data))
-	for i := range data {
-		in[i] = uapi8.AsUint8(data[i])
-	}
-
 	h0 := frontend.Variable(0x6a09e667)
 	h1 := frontend.Variable(0xbb67ae85)
 	h2 := frontend.Variable(0x3c6ef372)
