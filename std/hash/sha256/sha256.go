@@ -23,10 +23,13 @@ func newSha256(api frontend.API) Sha256 {
 
 func Sha256Api(api frontend.API, data ...frontend.Variable) frontend.Variable {
 	sha := newSha256(api)
+	uapi8 := sha.uapi8
+	uapi32 := sha.uapi32
+	gnark := sha.api
 
 	in := make([]keccakf.Xuint8, len(data))
 	for i := range data {
-		in[i] = sha.uapi8.AsUint8(data[i])
+		in[i] = uapi8.AsUint8(data[i])
 	}
 
 	h0 := keccakf.ConstUint32(0x6a09e667)
@@ -48,37 +51,12 @@ func Sha256Api(api frontend.API, data ...frontend.Variable) frontend.Variable {
 		keccakf.ConstUint32(0x19a4c116), keccakf.ConstUint32(0x1e376c08), keccakf.ConstUint32(0x2748774c), keccakf.ConstUint32(0x34b0bcb5), keccakf.ConstUint32(0x391c0cb3), keccakf.ConstUint32(0x4ed8aa4a), keccakf.ConstUint32(0x5b9cca4f), keccakf.ConstUint32(0x682e6ff3),
 		keccakf.ConstUint32(0x748f82ee), keccakf.ConstUint32(0x78a5636f), keccakf.ConstUint32(0x84c87814), keccakf.ConstUint32(0x8cc70208), keccakf.ConstUint32(0x90befffa), keccakf.ConstUint32(0xa4506ceb), keccakf.ConstUint32(0xbef9a3f7), keccakf.ConstUint32(0xc67178f2)}
 
-	padded := append(in, keccakf.ConstUint8(0x80))
-	if len(padded)%64 < 56 {
-		suffix := make([]keccakf.Xuint8, 56-(len(padded)%64))
-		for i := 0; i < len(suffix); i++ {
-			suffix[i] = keccakf.ConstUint8(0)
-		}
-		padded = append(padded, suffix...)
-	} else {
-		suffix := make([]keccakf.Xuint8, 64+56-(len(padded)%64))
-		for i := 0; i < len(suffix); i++ {
-			suffix[i] = keccakf.ConstUint8(0)
-		}
-		padded = append(padded, suffix...)
-	}
-	msgLen := len(in) * 8
-	var bs []keccakf.Xuint8
-	bs = sha.uapi8.EncodeToXuint8(bs, keccakf.ConstUint64(uint64(msgLen)))
+	schedule := padding(in, sha)
 
-	//TODO: move to uapi8
-	for i := 7; i >= 0; i-- {
-		padded = append(padded, bs[i])
-	}
-
-	var schedule [][]keccakf.Xuint8
-	for i := 0; i < len(padded)/64; i++ {
-		schedule = append(schedule, padded[i*64:i*64+63])
-	}
 	for _, chunk := range schedule {
 		var w []keccakf.Xuint32
 		for i := 0; i < 16; i++ {
-			w = append(w, sha.uapi8.DecodeToXuint32BigEndian(chunk[i*4:i*4+4]))
+			w = append(w, uapi8.DecodeToXuint32BigEndian(chunk[i*4:i*4+4]))
 		}
 		w = append(w, make([]keccakf.Xuint32, 48)...)
 		for i := 16; i < 64; i++ {
@@ -87,16 +65,16 @@ func Sha256Api(api frontend.API, data ...frontend.Variable) frontend.Variable {
 
 		for i := 16; i < 64; i++ {
 			// s0 := (w[i-15] rightrotate 7) xor (w[i-15] rightrotate 18) xor (w[i-15] rightshift 3)
-			s0 := sha.uapi32.Xor(sha.rightRotate(w[i-15], 7), sha.rightRotate(w[i-15], 18), sha.rightShift(w[i-15], 3))
+			s0 := uapi32.Xor(sha.rightRotate(w[i-15], 7), sha.rightRotate(w[i-15], 18), sha.rightShift(w[i-15], 3))
 
 			// s1 := (w[i-2] rightrotate 17) xor (w[i-2] rightrotate 19) xor (w[i-2] rightshift 10)
-			s1 := sha.uapi32.Xor(sha.rightRotate(w[i-2], 17), sha.rightRotate(w[i-2], 19), sha.rightShift(w[i-2], 10))
+			s1 := uapi32.Xor(sha.rightRotate(w[i-2], 17), sha.rightRotate(w[i-2], 19), sha.rightShift(w[i-2], 10))
 
-			sum1 := sha.api.Add(sha.uapi32.FromUint32(w[i-16]), sha.uapi32.FromUint32(s0))
-			sum2 := sha.api.Add(sha.uapi32.FromUint32(w[i-7]), sha.uapi32.FromUint32(s1))
+			sum1 := gnark.Add(uapi32.FromUint32(w[i-16]), uapi32.FromUint32(s0))
+			sum2 := gnark.Add(uapi32.FromUint32(w[i-7]), uapi32.FromUint32(s1))
 
 			// w[i] := w[i-16] + s0 + w[i-7] + s1
-			w[i] = sha.uapi32.AsUint32(trimBits(sha.api, sha.api.Add(sum1, sum2), 34))
+			w[i] = uapi32.AsUint32(sha.trimBits(gnark.Add(sum1, sum2), 34))
 		}
 
 		a := h0
@@ -110,20 +88,20 @@ func Sha256Api(api frontend.API, data ...frontend.Variable) frontend.Variable {
 
 		for i := 0; i < 64; i++ {
 			// S1 := (e rightrotate 6) xor (e rightrotate 11) xor (e rightrotate 25)
-			S1 := sha.uapi32.Xor(sha.rightRotate(e, 6), sha.rightRotate(e, 11), sha.rightRotate(e, 25))
+			S1 := uapi32.Xor(sha.rightRotate(e, 6), sha.rightRotate(e, 11), sha.rightRotate(e, 25))
 
 			// ch := (e and f) xor ((not e) and g)
-			ch := sha.uapi32.Xor(sha.uapi32.And(e, f), sha.uapi32.And(sha.uapi32.Not(e), g))
+			ch := uapi32.Xor(uapi32.And(e, f), uapi32.And(uapi32.Not(e), g))
 
-			sum1 := sha.api.Add(sha.uapi32.FromUint32(h), sha.uapi32.FromUint32(S1))
-			sum2 := sha.api.Add(sha.uapi32.FromUint32(ch), sha.uapi32.FromUint32(k[i]))
-			sum3 := sha.api.Add(sum2, sha.uapi32.FromUint32(w[i]))
+			sum1 := gnark.Add(uapi32.FromUint32(h), uapi32.FromUint32(S1))
+			sum2 := gnark.Add(uapi32.FromUint32(ch), uapi32.FromUint32(k[i]))
+			sum3 := gnark.Add(sum2, uapi32.FromUint32(w[i]))
 
 			// temp1 := h + S1 + ch + k[i] + w[i]
-			temp1 := sha.api.Add(sum1, sum3)
+			temp1 := gnark.Add(sum1, sum3)
 
 			// S0 := (a rightrotate 2) xor (a rightrotate 13) xor (a rightrotate 22)
-			S0 := sha.uapi32.Xor(sha.rightRotate(a, 2), sha.rightRotate(a, 13), sha.rightRotate(a, 22))
+			S0 := uapi32.Xor(sha.rightRotate(a, 2), sha.rightRotate(a, 13), sha.rightRotate(a, 22))
 
 			// https://github.com/akosba/jsnark/blob/master/JsnarkCircuitBuilder/src/examples/gadgets/hash/SHA256Gadget.java
 			minusTwo := [32]frontend.Variable{0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1} // -2 in little endian, of size 32
@@ -140,16 +118,15 @@ func Sha256Api(api frontend.API, data ...frontend.Variable) frontend.Variable {
 				z = c[:]
 			}
 
-			// working with less complexity compared to uncommented tmp4 calculation below works
 			for j := 0; j < 32; j++ {
-				t4t1 := sha.api.And(x[j], y[j])
-				t4t2 := sha.api.Or(sha.api.Or(x[j], y[j]), sha.api.And(t4t1, minusTwo[j]))
-				tmp4Bits[j] = sha.api.Or(t4t1, sha.api.And(z[j], t4t2))
+				t4t1 := gnark.And(x[j], y[j])
+				t4t2 := gnark.Or(gnark.Or(x[j], y[j]), gnark.And(t4t1, minusTwo[j]))
+				tmp4Bits[j] = gnark.Or(t4t1, gnark.And(z[j], t4t2))
 			}
-			tmp4 := sha.api.FromBinary(tmp4Bits...)
+			tmp4 := gnark.FromBinary(tmp4Bits...)
 
 			// t2 computation
-			temp2 := sha.api.Add(sha.uapi32.FromUint32(S0), tmp4)
+			temp2 := gnark.Add(uapi32.FromUint32(S0), tmp4)
 
 			/*
 			   h := g
@@ -164,11 +141,11 @@ func Sha256Api(api frontend.API, data ...frontend.Variable) frontend.Variable {
 			h = g
 			g = f
 			f = e
-			e = sha.uapi32.AsUint32(trimBits(sha.api, sha.api.Add(sha.uapi32.FromUint32(d), temp1), 35))
+			e = uapi32.AsUint32(sha.trimBits(gnark.Add(uapi32.FromUint32(d), temp1), 35))
 			d = c
 			c = b
 			b = a
-			a = sha.uapi32.AsUint32(trimBits(sha.api, sha.api.Add(temp1, temp2), 35))
+			a = uapi32.AsUint32(sha.trimBits(gnark.Add(temp1, temp2), 35))
 		}
 
 		/*
@@ -182,17 +159,20 @@ func Sha256Api(api frontend.API, data ...frontend.Variable) frontend.Variable {
 		   h6 := h6 + g
 		   h7 := h7 + h
 		*/
-		h0 = sha.uapi32.AsUint32(trimBits(sha.api, sha.api.Add(sha.uapi32.FromUint32(h0), sha.uapi32.FromUint32(a)), 33))
-		h1 = sha.uapi32.AsUint32(trimBits(sha.api, sha.api.Add(sha.uapi32.FromUint32(h1), sha.uapi32.FromUint32(b)), 33))
-		h2 = sha.uapi32.AsUint32(trimBits(sha.api, sha.api.Add(sha.uapi32.FromUint32(h2), sha.uapi32.FromUint32(c)), 33))
-		h3 = sha.uapi32.AsUint32(trimBits(sha.api, sha.api.Add(sha.uapi32.FromUint32(h3), sha.uapi32.FromUint32(d)), 33))
-		h4 = sha.uapi32.AsUint32(trimBits(sha.api, sha.api.Add(sha.uapi32.FromUint32(h4), sha.uapi32.FromUint32(e)), 33))
-		h5 = sha.uapi32.AsUint32(trimBits(sha.api, sha.api.Add(sha.uapi32.FromUint32(h5), sha.uapi32.FromUint32(f)), 33))
-		h6 = sha.uapi32.AsUint32(trimBits(sha.api, sha.api.Add(sha.uapi32.FromUint32(h6), sha.uapi32.FromUint32(g)), 33))
-		h7 = sha.uapi32.AsUint32(trimBits(sha.api, sha.api.Add(sha.uapi32.FromUint32(h7), sha.uapi32.FromUint32(h)), 33))
+		h0 = uapi32.AsUint32(sha.trimBits(gnark.Add(uapi32.FromUint32(h0), uapi32.FromUint32(a)), 33))
+		h1 = uapi32.AsUint32(sha.trimBits(gnark.Add(uapi32.FromUint32(h1), uapi32.FromUint32(b)), 33))
+		h2 = uapi32.AsUint32(sha.trimBits(gnark.Add(uapi32.FromUint32(h2), uapi32.FromUint32(c)), 33))
+		h3 = uapi32.AsUint32(sha.trimBits(gnark.Add(uapi32.FromUint32(h3), uapi32.FromUint32(d)), 33))
+		h4 = uapi32.AsUint32(sha.trimBits(gnark.Add(uapi32.FromUint32(h4), uapi32.FromUint32(e)), 33))
+		h5 = uapi32.AsUint32(sha.trimBits(gnark.Add(uapi32.FromUint32(h5), uapi32.FromUint32(f)), 33))
+		h6 = uapi32.AsUint32(sha.trimBits(gnark.Add(uapi32.FromUint32(h6), uapi32.FromUint32(g)), 33))
+		h7 = uapi32.AsUint32(sha.trimBits(gnark.Add(uapi32.FromUint32(h7), uapi32.FromUint32(h)), 33))
 	}
 
-	hashBytes := [][]keccakf.Xuint8{sha.iToB(h0), sha.iToB(h1), sha.iToB(h2), sha.iToB(h3), sha.iToB(h4), sha.iToB(h5), sha.iToB(h6), sha.iToB(h7)}
+	hashBytes := [][]keccakf.Xuint8{
+		sha.toBytes(h0), sha.toBytes(h1), sha.toBytes(h2), sha.toBytes(h3),
+		sha.toBytes(h4), sha.toBytes(h5), sha.toBytes(h6), sha.toBytes(h7),
+	}
 	var res []keccakf.Xuint8
 	for i := 0; i < 8; i++ {
 		res = append(res, hashBytes[i]...)
@@ -207,9 +187,38 @@ func Sha256Api(api frontend.API, data ...frontend.Variable) frontend.Variable {
 	return api.FromBinary(sha256Bits[:]...)
 }
 
-func (h *Sha256) iToB(i keccakf.Xuint32) []keccakf.Xuint8 {
-	var res []keccakf.Xuint8
-	return h.uapi8.EncodeToXuint8From32BigEndian(res, i)
+func padding(in []keccakf.Xuint8, sha Sha256) [][]keccakf.Xuint8 {
+	padded := append(in, keccakf.ConstUint8(0x80))
+	if len(padded)%64 < 56 {
+		suffix := make([]keccakf.Xuint8, 56-(len(padded)%64))
+		for i := 0; i < len(suffix); i++ {
+			suffix[i] = keccakf.ConstUint8(0)
+		}
+		padded = append(padded, suffix...)
+	} else {
+		suffix := make([]keccakf.Xuint8, 64+56-(len(padded)%64))
+		for i := 0; i < len(suffix); i++ {
+			suffix[i] = keccakf.ConstUint8(0)
+		}
+		padded = append(padded, suffix...)
+	}
+	msgLen := len(in) * 8
+	var bs []keccakf.Xuint8
+	bs = sha.uapi64.EncodeToXuint8(bs, keccakf.ConstUint64(uint64(msgLen)))
+	//TODO: move to uapi
+	for i := 7; i >= 0; i-- {
+		padded = append(padded, bs[i])
+	}
+
+	var schedule [][]keccakf.Xuint8
+	for i := 0; i < len(padded)/64; i++ {
+		schedule = append(schedule, padded[i*64:i*64+63])
+	}
+	return schedule
+}
+
+func (h *Sha256) toBytes(x keccakf.Xuint32) []keccakf.Xuint8 {
+	return h.uapi32.EncodeToXuint8BigEndian(x)
 }
 
 func (h *Sha256) rightRotate(n keccakf.Xuint32, shift int) keccakf.Xuint32 {
@@ -221,10 +230,9 @@ func (h *Sha256) rightShift(n keccakf.Xuint32, shift int) keccakf.Xuint32 {
 }
 
 // https://github.com/akosba/jsnark/blob/master/JsnarkCircuitBuilder/src/examples/gadgets/hash/SHA256Gadget.java
-func trimBits(api frontend.API, a frontend.Variable, size int) frontend.Variable {
-
+func (h *Sha256) trimBits(a frontend.Variable, size int) frontend.Variable {
 	requiredSize := 32
-	aBits := api.ToBinary(a, size)
+	aBits := h.api.ToBinary(a, size)
 	x := make([]frontend.Variable, requiredSize)
 
 	for i := requiredSize; i < size; i++ {
@@ -234,5 +242,5 @@ func trimBits(api frontend.API, a frontend.Variable, size int) frontend.Variable
 		x[i] = aBits[i]
 	}
 
-	return api.FromBinary(x...)
+	return h.api.FromBinary(x...)
 }

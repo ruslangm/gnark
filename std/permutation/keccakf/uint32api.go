@@ -28,10 +28,6 @@ func ConstUint32(a uint32) Xuint32 {
 	return res
 }
 
-func (w *Uint32api) FromUint64(in Xuint32) frontend.Variable {
-	return bits.FromBinary(w.api, in[:], bits.WithUnconstrainedInputs())
-}
-
 func (w *Uint32api) AsUint32(in frontend.Variable) Xuint32 {
 	bits := bits.ToBinary(w.api, in, bits.WithNbDigits(32))
 	var res Xuint32
@@ -41,14 +37,6 @@ func (w *Uint32api) AsUint32(in frontend.Variable) Xuint32 {
 
 func (w *Uint32api) FromUint32(in Xuint32) frontend.Variable {
 	return bits.FromBinary(w.api, in[:], bits.WithUnconstrainedInputs())
-}
-
-func (w *Uint32api) FromUint32BE(in Xuint32) frontend.Variable {
-	res := [32]frontend.Variable{}
-	for i := range res {
-		res[i] = in[len(in)-1-i]
-	}
-	return bits.FromBinary(w.api, res[:], bits.WithUnconstrainedInputs())
 }
 
 func (w *Uint32api) And(in ...Xuint32) Xuint32 {
@@ -125,4 +113,13 @@ func (w *Uint32api) assertEq(a, b Xuint32) {
 	for i := range a {
 		w.api.AssertIsEqual(a[i], b[i])
 	}
+}
+
+func (w *Uint32api) EncodeToXuint8BigEndian(x Xuint32) []Xuint8 {
+	var res [4]Xuint8
+	copy(res[0][:], x[24:32])
+	copy(res[1][:], x[16:24])
+	copy(res[2][:], x[8:16])
+	copy(res[3][:], x[0:8])
+	return res[:]
 }
