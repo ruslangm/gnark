@@ -32,24 +32,24 @@ func Sha256Api(api frontend.API, data ...frontend.Variable) frontend.Variable {
 		in[i] = uapi8.AsUint8(data[i])
 	}
 
-	h0 := keccakf.ConstUint32(0x6a09e667)
-	h1 := keccakf.ConstUint32(0xbb67ae85)
-	h2 := keccakf.ConstUint32(0x3c6ef372)
-	h3 := keccakf.ConstUint32(0xa54ff53a)
-	h4 := keccakf.ConstUint32(0x510e527f)
-	h5 := keccakf.ConstUint32(0x9b05688c)
-	h6 := keccakf.ConstUint32(0x1f83d9ab)
-	h7 := keccakf.ConstUint32(0x5be0cd19)
+	h0 := frontend.Variable(0x6a09e667)
+	h1 := frontend.Variable(0xbb67ae85)
+	h2 := frontend.Variable(0x3c6ef372)
+	h3 := frontend.Variable(0xa54ff53a)
+	h4 := frontend.Variable(0x510e527f)
+	h5 := frontend.Variable(0x9b05688c)
+	h6 := frontend.Variable(0x1f83d9ab)
+	h7 := frontend.Variable(0x5be0cd19)
 
-	k := [64]keccakf.Xuint32{
-		keccakf.ConstUint32(0x428a2f98), keccakf.ConstUint32(0x71374491), keccakf.ConstUint32(0xb5c0fbcf), keccakf.ConstUint32(0xe9b5dba5), keccakf.ConstUint32(0x3956c25b), keccakf.ConstUint32(0x59f111f1), keccakf.ConstUint32(0x923f82a4), keccakf.ConstUint32(0xab1c5ed5),
-		keccakf.ConstUint32(0xd807aa98), keccakf.ConstUint32(0x12835b01), keccakf.ConstUint32(0x243185be), keccakf.ConstUint32(0x550c7dc3), keccakf.ConstUint32(0x72be5d74), keccakf.ConstUint32(0x80deb1fe), keccakf.ConstUint32(0x9bdc06a7), keccakf.ConstUint32(0xc19bf174),
-		keccakf.ConstUint32(0xe49b69c1), keccakf.ConstUint32(0xefbe4786), keccakf.ConstUint32(0x0fc19dc6), keccakf.ConstUint32(0x240ca1cc), keccakf.ConstUint32(0x2de92c6f), keccakf.ConstUint32(0x4a7484aa), keccakf.ConstUint32(0x5cb0a9dc), keccakf.ConstUint32(0x76f988da),
-		keccakf.ConstUint32(0x983e5152), keccakf.ConstUint32(0xa831c66d), keccakf.ConstUint32(0xb00327c8), keccakf.ConstUint32(0xbf597fc7), keccakf.ConstUint32(0xc6e00bf3), keccakf.ConstUint32(0xd5a79147), keccakf.ConstUint32(0x06ca6351), keccakf.ConstUint32(0x14292967),
-		keccakf.ConstUint32(0x27b70a85), keccakf.ConstUint32(0x2e1b2138), keccakf.ConstUint32(0x4d2c6dfc), keccakf.ConstUint32(0x53380d13), keccakf.ConstUint32(0x650a7354), keccakf.ConstUint32(0x766a0abb), keccakf.ConstUint32(0x81c2c92e), keccakf.ConstUint32(0x92722c85),
-		keccakf.ConstUint32(0xa2bfe8a1), keccakf.ConstUint32(0xa81a664b), keccakf.ConstUint32(0xc24b8b70), keccakf.ConstUint32(0xc76c51a3), keccakf.ConstUint32(0xd192e819), keccakf.ConstUint32(0xd6990624), keccakf.ConstUint32(0xf40e3585), keccakf.ConstUint32(0x106aa070),
-		keccakf.ConstUint32(0x19a4c116), keccakf.ConstUint32(0x1e376c08), keccakf.ConstUint32(0x2748774c), keccakf.ConstUint32(0x34b0bcb5), keccakf.ConstUint32(0x391c0cb3), keccakf.ConstUint32(0x4ed8aa4a), keccakf.ConstUint32(0x5b9cca4f), keccakf.ConstUint32(0x682e6ff3),
-		keccakf.ConstUint32(0x748f82ee), keccakf.ConstUint32(0x78a5636f), keccakf.ConstUint32(0x84c87814), keccakf.ConstUint32(0x8cc70208), keccakf.ConstUint32(0x90befffa), keccakf.ConstUint32(0xa4506ceb), keccakf.ConstUint32(0xbef9a3f7), keccakf.ConstUint32(0xc67178f2)}
+	k := [64]frontend.Variable{
+		frontend.Variable(0x428a2f98), frontend.Variable(0x71374491), frontend.Variable(0xb5c0fbcf), frontend.Variable(0xe9b5dba5), frontend.Variable(0x3956c25b), frontend.Variable(0x59f111f1), frontend.Variable(0x923f82a4), frontend.Variable(0xab1c5ed5),
+		frontend.Variable(0xd807aa98), frontend.Variable(0x12835b01), frontend.Variable(0x243185be), frontend.Variable(0x550c7dc3), frontend.Variable(0x72be5d74), frontend.Variable(0x80deb1fe), frontend.Variable(0x9bdc06a7), frontend.Variable(0xc19bf174),
+		frontend.Variable(0xe49b69c1), frontend.Variable(0xefbe4786), frontend.Variable(0x0fc19dc6), frontend.Variable(0x240ca1cc), frontend.Variable(0x2de92c6f), frontend.Variable(0x4a7484aa), frontend.Variable(0x5cb0a9dc), frontend.Variable(0x76f988da),
+		frontend.Variable(0x983e5152), frontend.Variable(0xa831c66d), frontend.Variable(0xb00327c8), frontend.Variable(0xbf597fc7), frontend.Variable(0xc6e00bf3), frontend.Variable(0xd5a79147), frontend.Variable(0x06ca6351), frontend.Variable(0x14292967),
+		frontend.Variable(0x27b70a85), frontend.Variable(0x2e1b2138), frontend.Variable(0x4d2c6dfc), frontend.Variable(0x53380d13), frontend.Variable(0x650a7354), frontend.Variable(0x766a0abb), frontend.Variable(0x81c2c92e), frontend.Variable(0x92722c85),
+		frontend.Variable(0xa2bfe8a1), frontend.Variable(0xa81a664b), frontend.Variable(0xc24b8b70), frontend.Variable(0xc76c51a3), frontend.Variable(0xd192e819), frontend.Variable(0xd6990624), frontend.Variable(0xf40e3585), frontend.Variable(0x106aa070),
+		frontend.Variable(0x19a4c116), frontend.Variable(0x1e376c08), frontend.Variable(0x2748774c), frontend.Variable(0x34b0bcb5), frontend.Variable(0x391c0cb3), frontend.Variable(0x4ed8aa4a), frontend.Variable(0x5b9cca4f), frontend.Variable(0x682e6ff3),
+		frontend.Variable(0x748f82ee), frontend.Variable(0x78a5636f), frontend.Variable(0x84c87814), frontend.Variable(0x8cc70208), frontend.Variable(0x90befffa), frontend.Variable(0xa4506ceb), frontend.Variable(0xbef9a3f7), frontend.Variable(0xc67178f2)}
 
 	schedule := padding(in, sha)
 
@@ -77,14 +77,14 @@ func Sha256Api(api frontend.API, data ...frontend.Variable) frontend.Variable {
 			w[i] = uapi32.AsUint32(sha.trimBits(gnark.Add(sum1, sum2), 34))
 		}
 
-		a := h0
-		b := h1
-		c := h2
-		d := h3
-		e := h4
-		f := h5
-		g := h6
-		h := h7
+		a := uapi32.AsUint32(h0)
+		b := uapi32.AsUint32(h1)
+		c := uapi32.AsUint32(h2)
+		d := uapi32.AsUint32(h3)
+		e := uapi32.AsUint32(h4)
+		f := uapi32.AsUint32(h5)
+		g := uapi32.AsUint32(h6)
+		h := uapi32.AsUint32(h7)
 
 		for i := 0; i < 64; i++ {
 			// S1 := (e rightrotate 6) xor (e rightrotate 11) xor (e rightrotate 25)
@@ -94,7 +94,7 @@ func Sha256Api(api frontend.API, data ...frontend.Variable) frontend.Variable {
 			ch := uapi32.Xor(uapi32.And(e, f), uapi32.And(uapi32.Not(e), g))
 
 			sum1 := gnark.Add(uapi32.FromUint32(h), uapi32.FromUint32(S1))
-			sum2 := gnark.Add(uapi32.FromUint32(ch), uapi32.FromUint32(k[i]))
+			sum2 := gnark.Add(uapi32.FromUint32(ch), k[i])
 			sum3 := gnark.Add(sum2, uapi32.FromUint32(w[i]))
 
 			// temp1 := h + S1 + ch + k[i] + w[i]
@@ -159,19 +159,25 @@ func Sha256Api(api frontend.API, data ...frontend.Variable) frontend.Variable {
 		   h6 := h6 + g
 		   h7 := h7 + h
 		*/
-		h0 = uapi32.AsUint32(sha.trimBits(gnark.Add(uapi32.FromUint32(h0), uapi32.FromUint32(a)), 33))
-		h1 = uapi32.AsUint32(sha.trimBits(gnark.Add(uapi32.FromUint32(h1), uapi32.FromUint32(b)), 33))
-		h2 = uapi32.AsUint32(sha.trimBits(gnark.Add(uapi32.FromUint32(h2), uapi32.FromUint32(c)), 33))
-		h3 = uapi32.AsUint32(sha.trimBits(gnark.Add(uapi32.FromUint32(h3), uapi32.FromUint32(d)), 33))
-		h4 = uapi32.AsUint32(sha.trimBits(gnark.Add(uapi32.FromUint32(h4), uapi32.FromUint32(e)), 33))
-		h5 = uapi32.AsUint32(sha.trimBits(gnark.Add(uapi32.FromUint32(h5), uapi32.FromUint32(f)), 33))
-		h6 = uapi32.AsUint32(sha.trimBits(gnark.Add(uapi32.FromUint32(h6), uapi32.FromUint32(g)), 33))
-		h7 = uapi32.AsUint32(sha.trimBits(gnark.Add(uapi32.FromUint32(h7), uapi32.FromUint32(h)), 33))
+		h0 = sha.trimBits(gnark.Add(h0, uapi32.FromUint32(a)), 33)
+		h1 = sha.trimBits(gnark.Add(h1, uapi32.FromUint32(b)), 33)
+		h2 = sha.trimBits(gnark.Add(h2, uapi32.FromUint32(c)), 33)
+		h3 = sha.trimBits(gnark.Add(h3, uapi32.FromUint32(d)), 33)
+		h4 = sha.trimBits(gnark.Add(h4, uapi32.FromUint32(e)), 33)
+		h5 = sha.trimBits(gnark.Add(h5, uapi32.FromUint32(f)), 33)
+		h6 = sha.trimBits(gnark.Add(h6, uapi32.FromUint32(g)), 33)
+		h7 = sha.trimBits(gnark.Add(h7, uapi32.FromUint32(h)), 33)
 	}
 
 	hashBytes := [][]keccakf.Xuint8{
-		sha.toBytes(h0), sha.toBytes(h1), sha.toBytes(h2), sha.toBytes(h3),
-		sha.toBytes(h4), sha.toBytes(h5), sha.toBytes(h6), sha.toBytes(h7),
+		sha.toBytes(uapi32.AsUint32(h0)),
+		sha.toBytes(uapi32.AsUint32(h1)),
+		sha.toBytes(uapi32.AsUint32(h2)),
+		sha.toBytes(uapi32.AsUint32(h3)),
+		sha.toBytes(uapi32.AsUint32(h4)),
+		sha.toBytes(uapi32.AsUint32(h5)),
+		sha.toBytes(uapi32.AsUint32(h6)),
+		sha.toBytes(uapi32.AsUint32(h7)),
 	}
 	var res []keccakf.Xuint8
 	for i := 0; i < 8; i++ {
