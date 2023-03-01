@@ -51,12 +51,13 @@ func Sha256Api(api frontend.API, data ...frontend.Variable) frontend.Variable {
 		frontend.Variable(0x19a4c116), frontend.Variable(0x1e376c08), frontend.Variable(0x2748774c), frontend.Variable(0x34b0bcb5), frontend.Variable(0x391c0cb3), frontend.Variable(0x4ed8aa4a), frontend.Variable(0x5b9cca4f), frontend.Variable(0x682e6ff3),
 		frontend.Variable(0x748f82ee), frontend.Variable(0x78a5636f), frontend.Variable(0x84c87814), frontend.Variable(0x8cc70208), frontend.Variable(0x90befffa), frontend.Variable(0xa4506ceb), frontend.Variable(0xbef9a3f7), frontend.Variable(0xc67178f2)}
 
-	schedule := padding(in, sha)
+	schedule := padding(data, sha)
 
 	for _, chunk := range schedule {
 		var w []keccakf.Xuint32
 		for i := 0; i < 16; i++ {
-			w = append(w, uapi8.DecodeToXuint32BigEndian(chunk[i*4:i*4+4]))
+			chunk32 := []keccakf.Xuint8{uapi8.AsUint8(chunk[i*4]), uapi8.AsUint8(chunk[i*4+1]), uapi8.AsUint8(chunk[i*4+2]), uapi8.AsUint8(chunk[i*4+3])}
+			w = append(w, uapi8.DecodeToXuint32BigEndian(chunk32))
 		}
 		w = append(w, make([]keccakf.Xuint32, 48)...)
 		for i := 16; i < 64; i++ {
@@ -193,30 +194,30 @@ func Sha256Api(api frontend.API, data ...frontend.Variable) frontend.Variable {
 	return api.FromBinary(sha256Bits[:]...)
 }
 
-func padding(in []keccakf.Xuint8, sha Sha256) [][]keccakf.Xuint8 {
-	padded := append(in, keccakf.ConstUint8(0x80))
+func padding(in []frontend.Variable, sha Sha256) [][]frontend.Variable {
+	padded := append(in, frontend.Variable(0x80))
 	if len(padded)%64 < 56 {
-		suffix := make([]keccakf.Xuint8, 56-(len(padded)%64))
+		suffix := make([]frontend.Variable, 56-(len(padded)%64))
 		for i := 0; i < len(suffix); i++ {
-			suffix[i] = keccakf.ConstUint8(0)
+			suffix[i] = frontend.Variable(0)
 		}
 		padded = append(padded, suffix...)
 	} else {
-		suffix := make([]keccakf.Xuint8, 64+56-(len(padded)%64))
+		suffix := make([]frontend.Variable, 64+56-(len(padded)%64))
 		for i := 0; i < len(suffix); i++ {
-			suffix[i] = keccakf.ConstUint8(0)
+			suffix[i] = frontend.Variable(0)
 		}
 		padded = append(padded, suffix...)
 	}
 	msgLen := len(in) * 8
-	var bs []keccakf.Xuint8
-	bs = sha.uapi64.EncodeToXuint8(bs, keccakf.ConstUint64(uint64(msgLen)))
-	//TODO: move to uapi
+
+	bits := sha.api.ToBinary(msgLen, 64) // 64 bit = 8 byte
 	for i := 7; i >= 0; i-- {
-		padded = append(padded, bs[i])
+		start := i * 8
+		padded = append(padded, sha.api.FromBinary(bits[start:start+8]...))
 	}
 
-	var schedule [][]keccakf.Xuint8
+	var schedule [][]frontend.Variable
 	for i := 0; i < len(padded)/64; i++ {
 		schedule = append(schedule, padded[i*64:i*64+64])
 	}
