@@ -20,11 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/consensys/gnark/examples/gkr_mimc"
-	"github.com/consensys/gnark/frontend"
 	"github.com/consensys/gnark/frontend/cs"
-	"github.com/consensys/gnark/std/gkr/examples"
-	"github.com/consensys/gnark/std/gkr/gkr"
 	"github.com/fxamacker/cbor/v2"
 	"io"
 	"math/big"
@@ -55,6 +51,12 @@ type R1CS struct {
 	compiled.R1CS
 	Coefficients []fr.Element // R1C coefficients indexes point here
 	CoefT        cs.CoeffTable
+}
+
+var GKRWitnessGeneratorHandler func(id ecc.ID, inputs [][]fr.Element, bN, batchSize, initialLength int) (values []fr.Element, startLength, endLength int)
+
+func RegisterGKRWitnessGeneratorHandler(f func(id ecc.ID, inputs [][]fr.Element, bN, batchSize, initialLength int) (values []fr.Element, startLength, endLength int)) {
+	GKRWitnessGeneratorHandler = f
 }
 
 // NewR1CS returns a new R1CS and sets cs.Coefficient (fr.Element) from provided big.Int values
@@ -252,11 +254,14 @@ func (cs *R1CS) parallelSolve(a, b, c []fr.Element, solution *solution) error {
 
 func (cs *R1CS) assignGKRProofs(s *solution) {
 
+	// only works fo mimc hints
+	if len(s.MIMCHintsInputs) == 0 {
+		return
+	}
 	var bN = cs.GKRBN
 	var shift = 1 << bN
 	var batchSize = 13
 	// Creates the assignments values
-	nativeCircuits := examples.CreateMimcCircuitBatch(batchSize)
 	inputs := make([][]fr.Element, 1)
 	inputs[0] = make([]fr.Element, 2*(1<<bN))
 	inputsCovered := 0 // inputs
@@ -265,42 +270,11 @@ func (cs *R1CS) assignGKRProofs(s *solution) {
 		inputs[0][inputsCovered+shift].SetBigInt(s.MIMCHintsInputs[i][1])
 		inputsCovered++
 	}
-	for i := range nativeCircuits {
-		nativeCircuit := nativeCircuits[i]
-		assignment := nativeCircuit.Assign(inputs, 1)
-		outputs := assignment.Values[batchSize]
-		prover := gkr.NewProver(nativeCircuit, assignment)
-		proofg := prover.Prove(1)
-		qInitialprime, _ := gkr.GetInitialQPrimeAndQ(bN, 0)
-		c := gkr_mimc.AllocateGKRMimcTestCircuitBatch(bN, i)
-		c.Assign(proofg, inputs, outputs, qInitialprime)
-
-		for i := range inputs {
-			for j := range inputs[i] {
-				// copy gate should stay with initial inputs
-				// cipher gate needs to copy
-				if j < len(inputs[i])/2 {
-					inputs[i][j] = outputs[i][j/2]
-				}
-			}
-		}
-
-		w, err := witness.New(cs.CurveID(), nil)
-		if err != nil {
-			panic(err)
-		}
-
-		tVariable := reflect.ValueOf(struct{ A frontend.Variable }{}).FieldByName("A").Type()
-		w.Schema, err = w.Vector.FromAssignment(&c, tVariable, false)
-		if err != nil {
-			panic(err)
-		}
-
-		witnessToSolution := *w.Vector.(*bn254witness.Witness)
-		for j := s.InitialValuesLength - w.Vector.Len()*(7-i); j < s.InitialValuesLength-w.Vector.Len()*(6-i); j++ {
-			s.values[j] = witnessToSolution[j-s.InitialValuesLength+w.Vector.Len()*(7-i)]
-		}
-	}
+	values, startLen, endLen := GKRWitnessGeneratorHandler(cs.CurveID(), inputs, bN, batchSize, s.InitialValuesLength)
+	copy(s.values[startLen:endLen], values)
+	// from here we are using gkr inputs
+	// inputs, batchSize, bN, initial_length
+	// returns fr.Elements, start_length
 }
 
 // IsSolved returns nil if given witness solves the R1CS and error otherwise

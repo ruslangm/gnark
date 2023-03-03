@@ -315,15 +315,14 @@ func (system *r1cs) Xor(_a, _b frontend.Variable) frontend.Variable {
 	system.AssertIsBoolean(a)
 	system.AssertIsBoolean(b)
 
-	// the formulation used is for easing up the conversion to sparse r1cs
-	res := system.newInternalVariable()
-	system.MarkBoolean(res)
-	c := system.Neg(res).(compiled.LinearExpression)
-	c = append(c, a[0], b[0])
-	aa := system.Mul(a, 2)
-	system.Constraints = append(system.Constraints, newR1C(aa, b, c))
+	if len(b) > len(a) {
+		a, b = b, a
+	}
+	t := system.Sub(system.one(), system.Mul(b, 2))
+	t = system.Add(system.Mul(a, t), b)
+	system.MarkBoolean(t)
 
-	return res
+	return t
 }
 
 // Or compute the OR between two frontend.Variables

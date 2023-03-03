@@ -1,7 +1,6 @@
 package gkr
 
 import (
-	"github.com/consensys/gnark/std/gkr/gkr"
 	"github.com/consensys/gnark/std/gkr/snark/polynomial"
 	"github.com/consensys/gnark/std/gkr/snark/sumcheck"
 	"github.com/consensys/gnark/std/hash/poseidon"
@@ -39,15 +38,6 @@ func AllocateProof(bN int, circuit Circuit) Proof {
 		SumcheckProofs: SumcheckProofs,
 		ClaimsLeft:     ClaimsLeft,
 		ClaimsRight:    ClaimsRight,
-	}
-}
-
-// Assign the proof object
-func (p *Proof) Assign(proof gkr.Proof) {
-	for k := range p.SumcheckProofs {
-		p.SumcheckProofs[k].Assign(proof.SumcheckProofs[k])
-		p.ClaimsLeft[k] = proof.ClaimsLeft[k]
-		p.ClaimsRight[k] = proof.ClaimsRight[k]
 	}
 }
 
