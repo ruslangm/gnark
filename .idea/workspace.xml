@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="ALL" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="8139aadf-eeb7-4859-9d69-4156c4d4f3a5" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/backend/hint/builtin.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/hint/builtin.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/mimc/mimc_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/examples/mimc/mimc_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/zkbnb/circuit/dm_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/examples/zkbnb/circuit/dm_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/api.go" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/api.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/compile.go" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/compile.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/compiled/r1cs.go" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/compiled/r1cs.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/cs/r1cs/builder.go" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/cs/r1cs/builder.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/cs/scs/builder.go" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/cs/scs/builder.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/go.sum" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internal/backend/bn254/cs/r1cs.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/backend/bn254/cs/r1cs.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internal/backend/bn254/cs/r1cs_sparse.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/backend/bn254/cs/r1cs_sparse.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internal/backend/bn254/cs/solution.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/backend/bn254/cs/solution.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/std/hash/poseidon/poseidon.go" beforeDir="false" afterPath="$PROJECT_DIR$/std/hash/poseidon/poseidon.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/assert.go" beforeDir="false" afterPath="$PROJECT_DIR$/test/assert.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/engine.go" beforeDir="false" afterPath="$PROJECT_DIR$/test/engine.go" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Go File" />
+      </list>
+    </option>
+  </component>
+  <component name="GOROOT" url="file://$PROJECT_DIR$/../../../../go1.19.2" />
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/doc.go" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/examples/rollup/circuit.go" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/frontend/api.go" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/go.mod" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/test/engine.go" root0="FORCE_HIGHLIGHTING" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProjectId" id="2H48woNq2Psafwv8zgFgXgpdrKi" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;DefaultGoTemplateProperty&quot;: &quot;Go File&quot;,
+    &quot;RunOnceActivity.go.format.on.save.advertiser.fired&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.formatter.settings.were.checked&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.migrated.go.modules.settings&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.modules.go.list.on.any.changes.was.set&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.watchers.conflict.with.on.save.actions.check.performed&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;configurable..is.expanded&quot;: &quot;false&quot;,
+    &quot;configurable.GoLibrariesConfigurable.is.expanded&quot;: &quot;true&quot;,
+    &quot;go.import.settings.migrated&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/zhangsk97/go/src/github.com/Safulet/gnark-private/frontend&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;goland.project.structure&quot;
+  }
+}</component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/frontend" />
+      <recent name="$PROJECT_DIR$/std/gkr" />
+      <recent name="$PROJECT_DIR$/std" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Go Test.mimc_test.go (1)">
+    <configuration default="true" type="GoApplicationRunConfiguration" factoryName="Go Application">
+      <module name="gnark-private" />
+      <working_directory value="$PROJECT_DIR$" />
+      <kind value="PACKAGE" />
+      <package value="github.com/consensys/gnark" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="TestMimc in github.com/consensys/gnark/std/gkr/examples" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="gnark-private" />
+      <working_directory value="$PROJECT_DIR$/std/gkr/examples" />
+      <root_directory value="$PROJECT_DIR$" />
+      <kind value="PACKAGE" />
+      <package value="github.com/consensys/gnark/std/gkr/examples" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <pattern value="^\QTestMimc\E$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="TestPreimage in github.com/consensys/gnark/examples/mimc-gkr" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="gnark-private" />
+      <working_directory value="$PROJECT_DIR$/examples/mimc-gkr" />
+      <root_directory value="$PROJECT_DIR$" />
+      <kind value="PACKAGE" />
+      <package value="github.com/consensys/gnark/examples/mimc-gkr" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <pattern value="^\QTestPreimage\E$" />
+      <method v="2" />
+    </configuration>
+    <configuration default="true" type="GoTestRunConfiguration" factoryName="Go Test">
+      <module name="gnark-private" />
+      <working_directory value="$PROJECT_DIR$" />
+      <kind value="DIRECTORY" />
+      <package value="github.com/consensys/gnark" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <framework value="gotest" />
+      <method v="2" />
+    </configuration>
+    <configuration name="account_test.go" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="gnark-private" />
+      <working_directory value="$PROJECT_DIR$/examples/rollup" />
+      <root_directory value="$PROJECT_DIR$" />
+      <kind value="FILE" />
+      <package value="github.com/consensys/gnark" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$/examples/rollup/account_test.go" />
+      <framework value="gotest" />
+      <method v="2" />
+    </configuration>
+    <configuration name="mimc_test.go (1)" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="gnark-private" />
+      <working_directory value="$PROJECT_DIR$/examples/mimc-gkr" />
+      <root_directory value="$PROJECT_DIR$" />
+      <kind value="FILE" />
+      <package value="github.com/consensys/gnark" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$/examples/mimc-gkr/mimc_test.go" />
+      <framework value="gotest" />
+      <method v="2" />
+    </configuration>
+    <configuration name="mimc_test.go" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="gnark-private" />
+      <working_directory value="$PROJECT_DIR$/examples/mimc" />
+      <root_directory value="$PROJECT_DIR$" />
+      <kind value="FILE" />
+      <package value="github.com/consensys/gnark" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$/examples/mimc/mimc_test.go" />
+      <framework value="gotest" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Go Test.mimc_test.go (1)" />
+        <item itemvalue="Go Test.TestPreimage in github.com/consensys/gnark/examples/mimc-gkr" />
+        <item itemvalue="Go Test.TestMimc in github.com/consensys/gnark/std/gkr/examples" />
+        <item itemvalue="Go Test.mimc_test.go" />
+        <item itemvalue="Go Test.account_test.go" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VgoProject">
+    <settings-migrated>true</settings-migrated>
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/vendor/github.com/fxamacker/cbor/v2/stream.go</url>
+          <line>40</line>
+          <option name="timeStamp" value="251" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/vendor/github.com/fxamacker/cbor/v2/stream.go</url>
+          <line>30</line>
+          <option name="timeStamp" value="252" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/frontend/compile.go</url>
+          <line>109</line>
+          <option name="timeStamp" value="253" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/std/gkr/snark/gkr/mimc_test.go</url>
+          <line>82</line>
+          <option name="timeStamp" value="296" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/backend/groth16/groth16.go</url>
+          <line>354</line>
+          <option name="timeStamp" value="298" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/internal/backend/bn254/cs/r1cs.go</url>
+          <line>119</line>
+          <option name="timeStamp" value="320" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/internal/backend/bn254/cs/r1cs.go</url>
+          <line>170</line>
+          <option name="timeStamp" value="321" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/internal/backend/bn254/cs/r1cs.go</url>
+          <line>97</line>
+          <option name="timeStamp" value="360" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/internal/backend/bn254/witness/witness.go</url>
+          <line>107</line>
+          <option name="timeStamp" value="363" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+    <watches-manager>
+      <configuration name="GoTestRunConfiguration">
+        <watch expression="cs.LazyConsMap[19016]" language="go" />
+        <watch expression="&amp;con" language="go" />
+        <watch expression="cs.MHints" language="go" />
+        <watch expression="r.L" language="go" />
+        <watch expression="r.R" language="go" />
+        <watch expression="r.O" language="go" />
+        <watch expression="cccs.LazyCons" />
+      </configuration>
+    </watches-manager>
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/gnark_private$TestPreimage_in_github_com_consensys_gnark_examples_mimc_gkr.out" NAME="TestPreimage in github.com/consensys/gnark/examples/mimc-gkr Coverage Results" MODIFIED="1677725390087" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="GoCoverage" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />
+    <SUITE FILE_PATH="coverage/gnark_private$mimc_test_go__1_.out" NAME="mimc_test.go (1) Coverage Results" MODIFIED="1677653252555" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="GoCoverage" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />
+  </component>
+</project>
