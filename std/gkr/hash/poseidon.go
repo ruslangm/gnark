@@ -13,30 +13,12 @@ var PoseidonT4 PoseidonHasher
 // PoseidonT8 is a hasher with T = 8
 var PoseidonT8 PoseidonHasher
 
-// The parameters are set according to
-// https://eprint.iacr.org/2020/179.pdf
-func initPoseidon() {
-	PoseidonT2 = newPoseidonHasher(2, 8, 82)
-	PoseidonT4 = newPoseidonHasher(4, 8, 83)
-	PoseidonT8 = newPoseidonHasher(8, 8, 84)
-}
-
 // PoseidonHasher contains all the parameters to specify a poseidon hash function
 type PoseidonHasher struct {
 	t        int // size of Cauchy matrix
 	cauchy   [][]fr.Element
 	nRoundsF int
 	nRoundsP int
-}
-
-// NewPoseidonHasher generates the parameters to run poseidon
-func newPoseidonHasher(t, nRoundsF, nRoundsP int) PoseidonHasher {
-	return PoseidonHasher{
-		t:        t,
-		nRoundsF: nRoundsF,
-		nRoundsP: nRoundsP,
-		cauchy:   GenerateMDSMatrix(t),
-	}
 }
 
 // Hash hashes a full message
@@ -47,14 +29,9 @@ func (p *PoseidonHasher) Hash(msg []fr.Element) fr.Element {
 		block := make([]fr.Element, p.t)
 		if i+p.t >= len(msg) {
 			// Only zero-pad the input
-			for j, w := range msg[i:] {
-				block[j] = w
-			}
+			copy(block, msg[i:])
 		} else {
-			// Take a full chunk
-			for j, w := range msg[i : i+p.t] {
-				block[j] = w
-			}
+			copy(block, msg[i:i+p.t])
 		}
 		p.Update(state, block)
 	}
@@ -115,10 +92,10 @@ func GenerateMDSMatrix(t int) [][]fr.Element {
 func MatrixMultiplication(mat [][]fr.Element, vec []fr.Element) []fr.Element {
 	res := make([]fr.Element, len(mat))
 	var tmp fr.Element
-	for i, col := range mat {
-		for j, el := range col {
+	for i := range mat {
+		for j := range mat[i] {
 			tmp.Set(&vec[j])
-			tmp.Mul(&tmp, &el)
+			tmp.Mul(&tmp, &mat[i][j])
 			res[i].Add(&res[i], &tmp)
 		}
 	}

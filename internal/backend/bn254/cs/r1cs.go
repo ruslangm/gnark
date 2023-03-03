@@ -95,7 +95,7 @@ func (cs *R1CS) Solve(witness, a, b, c []fr.Element, opt backend.ProverConfig) (
 	}
 
 	// compute the wires and the a, b, c polynomials
-	nbCons := len(cs.Constraints) + cs.LazyCons.GetConstraintsAll()
+	nbCons := len(cs.Constraints) + cs.LazyCons.GetConstraintsAll()*cs.Lazified
 	if len(a) != nbCons || len(b) != nbCons || len(c) != nbCons {
 		err = errors.New("invalid input size: len(a, b, c) == len(Constraints)")
 		log.Err(err).Send()
@@ -285,9 +285,9 @@ func (cs *R1CS) IsSolved(witness *witness.Witness, opts ...backend.ProverOption)
 		return err
 	}
 
-	a := make([]fr.Element, len(cs.Constraints)+cs.LazyCons.GetConstraintsAll())
-	b := make([]fr.Element, len(cs.Constraints)+cs.LazyCons.GetConstraintsAll())
-	c := make([]fr.Element, len(cs.Constraints)+cs.LazyCons.GetConstraintsAll())
+	a := make([]fr.Element, len(cs.Constraints)+cs.LazyCons.GetConstraintsAll()*cs.Lazified)
+	b := make([]fr.Element, len(cs.Constraints)+cs.LazyCons.GetConstraintsAll()*cs.Lazified)
+	c := make([]fr.Element, len(cs.Constraints)+cs.LazyCons.GetConstraintsAll()*cs.Lazified)
 	v := witness.Vector.(*bn254witness.Witness)
 	_, err = cs.Solve(*v, a, b, c, opt)
 	return err
@@ -744,6 +744,7 @@ func (cs *R1CS) Lazify() map[int]int {
 			}
 		}
 	}
+	cs.Lazified = 1
 
 	return mapFromFull
 }

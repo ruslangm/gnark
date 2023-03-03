@@ -24,6 +24,7 @@ type R1CS struct {
 	ConstraintSystem
 	Constraints            []R1C
 	LazyCons               LazyR1CS
+	Lazified               int
 	LazyConsMap            map[int]LazyIndexedInputs
 	LazyConsStaticR1CMap   map[string][]R1C
 	LazyConsOriginInputMap map[string]LazyInputs

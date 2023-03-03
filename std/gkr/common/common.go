@@ -63,7 +63,10 @@ func FrToGenericArray(slice []fr.Element) []interface{} {
 func RandomFrArray(size int) []fr.Element {
 	res := make([]fr.Element, size)
 	for i := range res {
-		res[i].SetRandom()
+		_, err := res[i].SetRandom()
+		if err != nil {
+			panic(err)
+		}
 	}
 	return res
 }
@@ -74,7 +77,10 @@ func RandomFrDoubleSlice(nChunks, chunkSize int) [][]fr.Element {
 	for i := range res {
 		res[i] = make([]fr.Element, chunkSize)
 		for j := range res[i] {
-			res[i][j].SetRandom()
+			_, err := res[i][j].SetRandom()
+			if err != nil {
+				panic(err)
+			}
 		}
 	}
 	return res

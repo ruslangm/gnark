@@ -99,10 +99,10 @@ func InterpolateOnRange(values []fr.Element) []fr.Element {
 	result := make([]fr.Element, nEvals)
 	var tmp fr.Element
 
-	for i, value := range values {
-		for j, lagrangeCoeff := range lagrange[i] {
-			tmp.Set(&lagrangeCoeff)
-			tmp.Mul(&tmp, &value)
+	for i := range values {
+		for j := range lagrange[i] {
+			tmp.Set(&lagrange[i][j])
+			tmp.Mul(&tmp, &values[i])
 			result[j].Add(&result[j], &tmp)
 		}
 	}

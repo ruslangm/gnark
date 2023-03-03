@@ -2,6 +2,7 @@ package poseidon
 
 import (
 	"github.com/consensys/gnark/backend/hint"
+	"github.com/consensys/gnark/frontend/compiled"
 	"github.com/consensys/gnark/std/hash/poseidon/constants"
 
 	"github.com/consensys/gnark/frontend"
@@ -107,8 +108,8 @@ func Poseidon(api frontend.API, input ...frontend.Variable) frontend.Variable {
 		for i := 0; i < count; i++ {
 			lastIndex = (i + 1) * maxLength
 			copy(state[1:], input[startIndex:lastIndex])
-			//v := api.AddInternalVariableWithLazy(compiled.GetConstraintsNum(state[:], api))
-			//api.AddLazyPoseidon(v, state[:]...)
+			v := api.AddInternalVariableWithLazy(compiled.GetConstraintsNum(state[:], api))
+			api.AddLazyPoseidon(v, state[:]...)
 			state = permutation(api, state)
 			startIndex = lastIndex
 		}
@@ -119,8 +120,8 @@ func Poseidon(api frontend.API, input ...frontend.Variable) frontend.Variable {
 		lastIndex = inputLength
 		remainigLength := lastIndex - startIndex
 		copy(state[1:], input[startIndex:lastIndex])
-		//v := api.AddInternalVariableWithLazy(compiled.GetConstraintsNum(state[:remainigLength+1], api))
-		//api.AddLazyPoseidon(v, state[:remainigLength+1]...)
+		v := api.AddInternalVariableWithLazy(compiled.GetConstraintsNum(state[:remainigLength+1], api))
+		api.AddLazyPoseidon(v, state[:remainigLength+1]...)
 		state = permutation(api, state[:remainigLength+1])
 	}
 	return state[1]

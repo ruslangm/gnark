@@ -541,7 +541,7 @@ func buildLevels(ccs compiled.R1CS) ([][]int, int) {
 	}
 
 	gkrLevelsOffset := len(b.mLevels)
-	for cID, _ := range ccs.Constraints {
+	for cID := range ccs.Constraints {
 		if cID >= ccs.GKRConstraintsPos {
 			b.mLevels[b.nodeLevels[cID]]--
 			b.nodeLevels[cID] = b.nodeLevels[cID] + gkrLevelsOffset

@@ -55,15 +55,15 @@ func (a AddGate) GnarkEval(cs frontend.API, vL, vR frontend.Variable) frontend.V
 // EvalManyVR performs an element-wise addition of many vRs values by one vL value
 // res must be initialized with the same size as vRs
 func (a AddGate) EvalManyVR(res []fr.Element, vL *fr.Element, vRs []fr.Element) {
-	for i, vR := range vRs {
-		res[i].Add(vL, &vR)
+	for i := range vRs {
+		res[i].Add(vL, &vRs[i])
 	}
 }
 
 // EvalManyVL performs an element-wise addition of many vLs values by one vR value
 func (a AddGate) EvalManyVL(res []fr.Element, vLs []fr.Element, vR *fr.Element) {
-	for i, vL := range vLs {
-		res[i].Add(&vL, vR)
+	for i := range vLs {
+		res[i].Add(&vLs[i], vR)
 	}
 }
 
@@ -90,15 +90,15 @@ func (m MulGate) GnarkEval(cs frontend.API, vL, vR frontend.Variable) frontend.V
 
 // EvalManyVR performs an element-wise multiplication of many vRs values by one vL value
 func (m MulGate) EvalManyVR(res []fr.Element, vL *fr.Element, vRs []fr.Element) {
-	for i, vR := range vRs {
-		res[i].Mul(vL, &vR)
+	for i := range vRs {
+		res[i].Mul(vL, &vRs[i])
 	}
 }
 
 // EvalManyVL performs an element-wise multiplication of many vLs values by one vR value
 func (m MulGate) EvalManyVL(res, vLs []fr.Element, vR *fr.Element) {
-	for i, vL := range vLs {
-		res[i].Mul(&vL, vR)
+	for i := range vLs {
+		res[i].Mul(&vLs[i], vR)
 	}
 }
 

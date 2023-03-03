@@ -51,8 +51,8 @@ func (p SingleThreadedProver) GetClaim() fr.Element {
 	// Accumulate the values inside the result
 	var res fr.Element
 	for i := range splitValues {
-		for h, v := range splitValues[i] {
-			v.Mul(&v, &p.staticTables[i].Table[h])
+		for h := range splitValues[i] {
+			splitValues[i][h].Mul(&splitValues[i][h], &p.staticTables[i].Table[h])
 			res.Add(&res, &v)
 		}
 	}
@@ -280,9 +280,9 @@ func (p SingleThreadedProver) accumulateEvalsOnHR(
 	res := make([]fr.Element, nEvals)
 	for i := range splitValues {
 		for h := range splitValues[i] {
-			for t, v := range splitValues[i][h] {
-				v.Mul(&v, &evaledStaticTables[i][h][t])
-				res[t].Add(&res[t], &v)
+			for t := range splitValues[i][h] {
+				splitValues[i][h][t].Mul(&splitValues[i][h][t], &evaledStaticTables[i][h][t])
+				res[t].Add(&res[t], &splitValues[i][h][t])
 			}
 		}
 	}

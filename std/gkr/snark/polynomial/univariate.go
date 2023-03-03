@@ -58,9 +58,7 @@ func (u *Univariate) ZeroAndOne(cs frontend.API) frontend.Variable {
 
 	// coeffsInterface is required for cs.Add(a, b, coeffsInterface[1:]...) to be accepted.
 	coeffsInterface := make([]frontend.Variable, len(u.Coefficients))
-	for i, coeff := range u.Coefficients {
-		coeffsInterface[i] = coeff
-	}
+	copy(coeffsInterface, u.Coefficients)
 
 	res := cs.Add(u.Coefficients[0], u.Coefficients[0], coeffsInterface[1:]...)
 
