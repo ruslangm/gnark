@@ -33,3 +33,8 @@ f.g.
 	api.AssertIsEqual(circuit.Hash, resultst)
 ```
 
+5. add gkr assert valid in the final of total Define
+```go=
+	circuit.GKRs.AssertValid(api)
+```
+

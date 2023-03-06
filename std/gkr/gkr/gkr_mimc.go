@@ -22,6 +22,12 @@ func (g *GkrCircuit) AllocateGKRCircuit(bN int) {
 	}
 }
 
+func (g *GkrCircuit) AssertValid(api frontend.API) {
+	for _, c := range g {
+		c.Proof.AssertValid(api, c.Circuit, c.QInitial, c.QInitialprime, c.VInput, c.VOutput)
+	}
+}
+
 func AllocateGKRMimcTestCircuit(bN int) GkrCircuitSlice {
 	circuit := gkr.CreateMimcCircuit()
 	return GkrCircuitSlice{

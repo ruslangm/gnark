@@ -1,12 +1,12 @@
 package gkr
 
 import (
+	"github.com/consensys/gnark-crypto/ecc/bn254/fr"
 	"github.com/consensys/gnark/std/gkr/circuit"
 	"github.com/consensys/gnark/std/gkr/common"
 	"github.com/consensys/gnark/std/gkr/polynomial"
 	"github.com/consensys/gnark/std/gkr/sumcheck"
-
-	"github.com/consensys/gnark-crypto/ecc/bn254/fr"
+	"github.com/ethereum/go-ethereum/crypto"
 )
 
 // Prover contains all relevant data for a GKR prover
@@ -46,6 +46,31 @@ func GetInitialQPrimeAndQ(bN, bG int) ([]fr.Element, []fr.Element) {
 
 	for i := range qPrime {
 		qPrime[i].SetUint64(uint64(i + 1))
+	}
+
+	return qPrime, q
+}
+
+// GetInitialQPrimeAndQAndInput it depends on the inputs
+func GetInitialQPrimeAndQAndInput(bN, bG int, inputs []fr.Element) ([]fr.Element, []fr.Element) {
+	q := make([]fr.Element, bG)
+	qPrime := make([]fr.Element, bN)
+
+	// actually compute qInitial and qPrimeInitial
+	// TODO: Uses actual randomness
+	for i := range q {
+		q[i].SetUint64(uint64(i + 1))
+	}
+
+	bytesSeed := make([]byte, 0)
+	for i := range inputs {
+		b := inputs[i].Bytes()
+		bytesSeed = append(bytesSeed, b[:]...)
+	}
+	seed := crypto.Keccak256Hash(bytesSeed).Bytes()
+	for i := range qPrime {
+		qPrime[i].SetBytes(seed)
+		qPrime[i].Add(&qPrime[i], new(fr.Element).SetUint64(uint64(i+1)))
 	}
 
 	return qPrime, q
@@ -128,8 +153,8 @@ func (p *Prover) Prove(nCore int) Proof {
 	ClaimsRight := make([]fr.Element, nLayers)
 	SumcheckProofs := make([]sumcheck.Proof, nLayers)
 
-	// Initial round
-	qPrime, q := GetInitialQPrimeAndQ(p.bN, p.circuit.Layers[nLayers-1].BGOutputs)
+	// Initial round, here we use the inputs layer as randomness, for specific inputs, we got specific assignment
+	qPrime, q := GetInitialQPrimeAndQAndInput(p.bN, p.circuit.Layers[nLayers-1].BGOutputs, p.assignment.Values[0][0])
 	prover := p.InitialRoundSumcheckProver(qPrime, q, nCore)
 	proof, qPrime, qL, qR, finalClaims := prover.Prove(nCore)
 	SumcheckProofs[nLayers-1] = proof

@@ -18,7 +18,7 @@ func witnessGenerator(id ecc.ID, inputs [][]fr.Element, bN, batchSize, initialLe
 		outputs := assignment.Values[batchSize]
 		prover := NewProver(nativeCircuit, assignment)
 		proofg := prover.Prove(1)
-		qInitialprime, _ := GetInitialQPrimeAndQ(bN, 0)
+		qInitialprime, _ := GetInitialQPrimeAndQAndInput(bN, 0, inputs[0])
 		c := AllocateGKRMimcTestCircuitBatch(bN, i)
 		c.Assign(proofg, inputs, outputs, qInitialprime)
 

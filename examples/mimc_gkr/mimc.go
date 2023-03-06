@@ -39,9 +39,7 @@ func (circuit *Circuit) Define(api frontend.API) error {
 		//circuit.Hash2BySamePreImage(api)
 		circuit.Hash2BySamePreImageHint(api)
 	}
-	for _, c := range circuit.GKRs {
-		c.Proof.AssertValid(api, c.Circuit, c.QInitial, c.QInitialprime, c.VInput, c.VOutput)
-	}
+	circuit.GKRs.AssertValid(api)
 	return nil
 }
 
