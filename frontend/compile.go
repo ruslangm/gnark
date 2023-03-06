@@ -15,17 +15,19 @@ import (
 //
 // 1. it will first allocate the user inputs (see type Tag for more info)
 // example:
-// 		type MyCircuit struct {
-// 			Y frontend.Variable `gnark:"exponent,public"`
-// 		}
+//
+//	type MyCircuit struct {
+//		Y frontend.Variable `gnark:"exponent,public"`
+//	}
+//
 // in that case, Compile() will allocate one public variable with id "exponent"
 //
 // 2. it then calls circuit.Define(curveID, R1CS) to build the internal constraint system
 // from the declarative code
 //
-// 3. finally, it converts that to a ConstraintSystem.
-// 		if zkpID == backend.GROTH16	→ R1CS
-//		if zkpID == backend.PLONK 	→ SparseR1CS
+//  3. finally, it converts that to a ConstraintSystem.
+//     if zkpID == backend.GROTH16	→ R1CS
+//     if zkpID == backend.PLONK 	→ SparseR1CS
 //
 // initialCapacity is an optional parameter that reserves memory in slices
 // it should be set to the estimated number of constraints in the circuit, if known.
@@ -125,6 +127,7 @@ type CompileOption func(opt *CompileConfig) error
 type CompileConfig struct {
 	Capacity                  int
 	IgnoreUnconstrainedInputs bool
+	GkrBN                     int
 }
 
 // WithCapacity is a compile option that specifies the estimated capacity needed
@@ -133,6 +136,16 @@ type CompileConfig struct {
 func WithCapacity(capacity int) CompileOption {
 	return func(opt *CompileConfig) error {
 		opt.Capacity = capacity
+		return nil
+	}
+}
+
+// WithCapacity is a compile option that specifies the estimated capacity needed
+// for internal variables and constraints. If not set, then the initial capacity
+// is 0 and is dynamically allocated as needed.
+func WithGkrBN(GkrBN int) CompileOption {
+	return func(opt *CompileConfig) error {
+		opt.GkrBN = GkrBN
 		return nil
 	}
 }

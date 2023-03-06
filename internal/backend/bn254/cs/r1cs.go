@@ -53,6 +53,12 @@ type R1CS struct {
 	CoefT        cs.CoeffTable
 }
 
+var GKRWitnessGeneratorHandler func(id ecc.ID, inputs [][]fr.Element, bN, batchSize, initialLength int) (values []fr.Element, startLength, endLength int)
+
+func RegisterGKRWitnessGeneratorHandler(f func(id ecc.ID, inputs [][]fr.Element, bN, batchSize, initialLength int) (values []fr.Element, startLength, endLength int)) {
+	GKRWitnessGeneratorHandler = f
+}
+
 // NewR1CS returns a new R1CS and sets cs.Coefficient (fr.Element) from provided big.Int values
 func NewR1CS(cs compiled.R1CS, coefficients []big.Int, coef_table cs.CoeffTable) *R1CS {
 	r := R1CS{
@@ -76,7 +82,7 @@ func (cs *R1CS) Solve(witness, a, b, c []fr.Element, opt backend.ProverConfig) (
 	log := logger.Logger().With().Str("curve", cs.CurveID().String()).Int("nbConstraints", len(cs.Constraints)).Str("backend", "groth16").Logger()
 
 	nbWires := cs.NbPublicVariables + cs.NbSecretVariables + cs.NbInternalVariables
-	solution, err := newSolution(nbWires, opt.HintFunctions, cs.MHintsDependencies, cs.MHints, cs.Coefficients)
+	solution, err := newSolution(nbWires, opt.HintFunctions, cs.MHintsDependencies, cs.MHints, cs.Coefficients, cs.MIMCHints)
 	if err != nil {
 		return make([]fr.Element, nbWires), err
 	}
@@ -89,7 +95,7 @@ func (cs *R1CS) Solve(witness, a, b, c []fr.Element, opt backend.ProverConfig) (
 	}
 
 	// compute the wires and the a, b, c polynomials
-	nbCons := len(cs.Constraints) + cs.LazyCons.GetConstraintsAll()
+	nbCons := len(cs.Constraints) + cs.LazyCons.GetConstraintsAll()*cs.Lazified
 	if len(a) != nbCons || len(b) != nbCons || len(c) != nbCons {
 		err = errors.New("invalid input size: len(a, b, c) == len(Constraints)")
 		log.Err(err).Send()
@@ -102,6 +108,7 @@ func (cs *R1CS) Solve(witness, a, b, c []fr.Element, opt backend.ProverConfig) (
 	for i := 0; i < len(witness); i++ {
 		solution.solved[i+1] = true
 	}
+	solution.InitialValuesLength = len(witness) + 1
 
 	// keep track of the number of wire instantiations we do, for a sanity check to ensure
 	// we instantiated all wires
@@ -172,7 +179,6 @@ func (cs *R1CS) parallelSolve(a, b, c []fr.Element, solution *solution) error {
 			}
 		}()
 	}
-
 	// clean up pool go routines
 	defer func() {
 		close(chTasks)
@@ -180,8 +186,11 @@ func (cs *R1CS) parallelSolve(a, b, c []fr.Element, solution *solution) error {
 	}()
 
 	// for each level, we push the tasks
-	for _, level := range cs.Levels {
+	for i, level := range cs.Levels {
 
+		if i == cs.GKRConstraintsLvl {
+			cs.assignGKRProofs(solution)
+		}
 		// max CPU to use
 		maxCPU := float64(len(level)) / minWorkPerCPU
 
@@ -240,8 +249,32 @@ func (cs *R1CS) parallelSolve(a, b, c []fr.Element, solution *solution) error {
 			return <-chError
 		}
 	}
-
 	return nil
+}
+
+func (cs *R1CS) assignGKRProofs(s *solution) {
+
+	// only works fo mimc hints
+	if len(s.MIMCHintsInputs) == 0 {
+		return
+	}
+	var bN = cs.GKRBN
+	var shift = 1 << bN
+	var batchSize = 13
+	// Creates the assignments values
+	inputs := make([][]fr.Element, 1)
+	inputs[0] = make([]fr.Element, 2*(1<<bN))
+	inputsCovered := 0 // inputs
+	for i := range s.MIMCHintsInputs {
+		inputs[0][inputsCovered].SetBigInt(s.MIMCHintsInputs[i][0])
+		inputs[0][inputsCovered+shift].SetBigInt(s.MIMCHintsInputs[i][1])
+		inputsCovered++
+	}
+	values, startLen, endLen := GKRWitnessGeneratorHandler(cs.CurveID(), inputs, bN, batchSize, s.InitialValuesLength)
+	copy(s.values[startLen:endLen], values)
+	// from here we are using gkr inputs
+	// inputs, batchSize, bN, initial_length
+	// returns fr.Elements, start_length
 }
 
 // IsSolved returns nil if given witness solves the R1CS and error otherwise
@@ -252,9 +285,9 @@ func (cs *R1CS) IsSolved(witness *witness.Witness, opts ...backend.ProverOption)
 		return err
 	}
 
-	a := make([]fr.Element, len(cs.Constraints)+cs.LazyCons.GetConstraintsAll())
-	b := make([]fr.Element, len(cs.Constraints)+cs.LazyCons.GetConstraintsAll())
-	c := make([]fr.Element, len(cs.Constraints)+cs.LazyCons.GetConstraintsAll())
+	a := make([]fr.Element, len(cs.Constraints)+cs.LazyCons.GetConstraintsAll()*cs.Lazified)
+	b := make([]fr.Element, len(cs.Constraints)+cs.LazyCons.GetConstraintsAll()*cs.Lazified)
+	c := make([]fr.Element, len(cs.Constraints)+cs.LazyCons.GetConstraintsAll()*cs.Lazified)
 	v := witness.Vector.(*bn254witness.Witness)
 	_, err = cs.Solve(*v, a, b, c, opt)
 	return err
@@ -711,6 +744,7 @@ func (cs *R1CS) Lazify() map[int]int {
 			}
 		}
 	}
+	cs.Lazified = 1
 
 	return mapFromFull
 }

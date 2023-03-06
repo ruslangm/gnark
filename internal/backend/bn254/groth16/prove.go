@@ -336,7 +336,7 @@ func ProveRoll(r1cs *cs.R1CS, pkE, pkB2 *ProvingKey, witness bn254witness.Witnes
 
 	{
 		card := pkE.Card
-		nbCons := r1cs.GetNbConstraints() + r1cs.LazyCons.GetConstraintsAll()
+		nbCons := r1cs.GetNbConstraints() + r1cs.LazyCons.GetConstraintsAll()*r1cs.Lazified
 		a := make([]fr.Element, nbCons, card)
 		b := make([]fr.Element, nbCons, card)
 		c := make([]fr.Element, nbCons, card)
