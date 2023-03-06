@@ -16,6 +16,12 @@ type GkrCircuitSlice struct {
 
 type GkrCircuit [7]GkrCircuitSlice
 
+func (g *GkrCircuit) AllocateGKRCircuit(bN int) {
+	for i := range g {
+		g[i] = AllocateGKRMimcTestCircuitBatch(bN, i)
+	}
+}
+
 func AllocateGKRMimcTestCircuit(bN int) GkrCircuitSlice {
 	circuit := gkr.CreateMimcCircuit()
 	return GkrCircuitSlice{

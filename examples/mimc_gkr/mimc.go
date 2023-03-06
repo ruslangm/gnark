@@ -15,10 +15,10 @@
 package mimc
 
 import (
-	"github.com/consensys/gnark/backend/hint"
 	"github.com/consensys/gnark/frontend"
 	"github.com/consensys/gnark/std/gkr/gkr"
 	"github.com/consensys/gnark/std/hash/mimc"
+	"github.com/consensys/gnark/std/hash/mimc_gkr"
 )
 
 // Circuit defines a pre-image knowledge proof
@@ -57,45 +57,6 @@ func (circuit *Circuit) Hash2BySamePreImage(api frontend.API) {
 
 // Hash2BySamePreImageHint 1 constriants for hashing 2 elements
 func (circuit *Circuit) Hash2BySamePreImageHint(api frontend.API) {
-	results, err := api.Compiler().NewHint(hint.MIMC2Elements, 1, circuit.PreImage, circuit.PreImage)
-	if err != nil {
-		panic(err)
-	}
-	api.AssertIsEqual(circuit.Hash, results[0])
-
-	results, err = api.Compiler().NewHint(hint.MIMC2Elements, 1, circuit.PreImage, circuit.PreImage)
-	if err != nil {
-		panic(err)
-	}
-	api.AssertIsEqual(circuit.Hash, results[0])
-
-	results, err = api.Compiler().NewHint(hint.MIMC2Elements, 1, circuit.PreImage, circuit.PreImage)
-	if err != nil {
-		panic(err)
-	}
-	api.AssertIsEqual(circuit.Hash, results[0])
-
-	results, err = api.Compiler().NewHint(hint.MIMC2Elements, 1, circuit.PreImage, circuit.PreImage)
-	if err != nil {
-		panic(err)
-	}
-	api.AssertIsEqual(circuit.Hash, results[0])
-
-	results, err = api.Compiler().NewHint(hint.MIMC2Elements, 1, circuit.PreImage, circuit.PreImage)
-	if err != nil {
-		panic(err)
-	}
-	api.AssertIsEqual(circuit.Hash, results[0])
-
-	results, err = api.Compiler().NewHint(hint.MIMC2Elements, 1, circuit.PreImage, circuit.PreImage)
-	if err != nil {
-		panic(err)
-	}
-	api.AssertIsEqual(circuit.Hash, results[0])
-
-	results, err = api.Compiler().NewHint(hint.MIMC2Elements, 1, circuit.PreImage, circuit.PreImage)
-	if err != nil {
-		panic(err)
-	}
-	api.AssertIsEqual(circuit.Hash, results[0])
+	result := mimc_gkr.NewMimcWithGKR(api, circuit.PreImage, circuit.PreImage)
+	api.AssertIsEqual(circuit.Hash, result)
 }

@@ -33,14 +33,10 @@ func (g *GMimcHasher) Hash(msg []fr.Element) fr.Element {
 		block := make([]fr.Element, g.t)
 		if i+g.t >= len(msg) {
 			// Only zero-pad the input
-			for j, w := range msg[i:] {
-				block[j] = w
-			}
+			copy(block, msg[i:])
 		} else {
 			// Take a full chunk
-			for j, w := range msg[i : i+g.t] {
-				block[j] = w
-			}
+			copy(block, msg[i:i+g.t])
 		}
 		g.UpdateInplace(state, block)
 	}

@@ -20,9 +20,6 @@ import (
 	"github.com/consensys/gnark/backend/groth16"
 	"github.com/consensys/gnark/frontend"
 	"github.com/consensys/gnark/frontend/cs/r1cs"
-	"github.com/consensys/gnark/std/gkr/common"
-	"github.com/consensys/gnark/std/gkr/gkr"
-	"math/big"
 	"testing"
 
 	"github.com/consensys/gnark/test"
@@ -36,35 +33,11 @@ func TestPreimage(t *testing.T) {
 		Hash:     "20568119741485842979359920820457607712024599461690104759159310350948929750336",
 	}
 
-	var batchSize = 13
-	var bN = 4
-
-	preImage, _ := new(big.Int).SetString("16130099170765464552823636852555369511329944820189892919423002775646948828469", 10)
-	preImage2, _ := new(big.Int).SetString("16130099170765464552823636852555369511329944820189892919423002775646948828469", 10)
-
+	var bN = 1
 	// Creates the assignments values
-	nativeCircuits := gkr.CreateMimcCircuitBatch(batchSize)
-	inputs := common.PickInputs([]*big.Int{preImage, preImage2, preImage, preImage2}, 2*(1<<bN))
-
 	var circuit Circuit
-	for i := range nativeCircuits {
-		nativeCircuit := nativeCircuits[i]
-		assignment := nativeCircuit.Assign(inputs, 1)
-		outputs := assignment.Values[batchSize]
-		mimcCircuit.GKRs[i] = gkr.AllocateGKRMimcTestCircuitBatch(bN, i)
-		circuit.GKRs[i] = gkr.AllocateGKRMimcTestCircuitBatch(bN, i)
-
-		for i := range inputs {
-			for j := range inputs[i] {
-				// copy gate should stay with initial inputs
-				// cipher gate needs to copy
-				if j < len(inputs[i])/2 {
-					inputs[i][j] = outputs[i][j/2]
-				}
-			}
-		}
-	}
-
+	mimcCircuit.GKRs.AllocateGKRCircuit(bN)
+	circuit.GKRs.AllocateGKRCircuit(bN)
 	ccs, err := frontend.Compile(ecc.BN254, r1cs.NewBuilder, &circuit, frontend.IgnoreUnconstrainedInputs(), frontend.WithGkrBN(bN))
 
 	fmt.Println(ccs.GetNbConstraints())
