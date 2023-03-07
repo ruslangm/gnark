@@ -540,11 +540,20 @@ func buildLevels(ccs compiled.R1CS) ([][]int, int) {
 
 	}
 
-	gkrLevelsOffset := len(b.mLevels)
+	gkrTransferMap := make(map[int]int)
 	for cID := range ccs.Constraints {
 		if cID >= ccs.GKRConstraintsPos {
+			// current level reduce one
 			b.mLevels[b.nodeLevels[cID]]--
-			b.nodeLevels[cID] = b.nodeLevels[cID] + gkrLevelsOffset
+
+			// if we have a transfer
+			if tolevel, transfer := gkrTransferMap[b.nodeLevels[cID]]; transfer {
+				b.nodeLevels[cID] = tolevel
+			} else {
+				// add a new level
+				gkrTransferMap[b.nodeLevels[cID]] = len(b.mLevels)
+				b.nodeLevels[cID] = len(b.mLevels)
+			}
 			b.mLevels[b.nodeLevels[cID]]++
 		}
 		if cID == ccs.GKRConstraintsPos {

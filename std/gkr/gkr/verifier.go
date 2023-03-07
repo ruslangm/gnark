@@ -31,7 +31,7 @@ func (v *Verifier) Verify(
 
 	nLayers := len(v.circuit.Layers)
 
-	qPrime, q := GetInitialQPrimeAndQ(v.bN, v.circuit.Layers[nLayers-1].BGOutputs)
+	qPrime, q := GetInitialQPrimeAndQAndInput(v.bN, v.circuit.Layers[nLayers-1].BGOutputs, inputs[0])
 	var qL, qR []fr.Element
 
 	claim := polynomial.EvaluateChunked(
