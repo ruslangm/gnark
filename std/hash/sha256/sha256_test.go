@@ -66,4 +66,6 @@ func TestConstraintsSha256(t *testing.T) {
 
 	oR1cs, _ := frontend.Compile(ecc.BN254, r1cs.NewBuilder, &witness, frontend.IgnoreUnconstrainedInputs())
 	fmt.Printf("Constraints num=%v\n", oR1cs.GetNbConstraints())
+	internal, secret, public := oR1cs.GetNbVariables()
+	fmt.Printf("Variables num %v, %v, %v (internal, secret, public)\n", internal, secret, public)
 }

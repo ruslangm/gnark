@@ -87,7 +87,7 @@ func Sha256Api(api frontend.API, data ...frontend.Variable) frontend.Variable {
 			S1 := uapi32.Xor(sha.rightRotate(e, 6), sha.rightRotate(e, 11), sha.rightRotate(e, 25))
 
 			// ch := (e and f) xor ((not e) and g)
-			ch := uapi32.Xor(uapi32.And(e, f), uapi32.And(uapi32.Not(e), g))
+			ch := sha.calculateCh(e, f, g)
 
 			sum1 := gnark.Add(uapi32.FromUint32(h), uapi32.FromUint32(S1))
 			sum2 := gnark.Add(uapi32.FromUint32(ch), k[i])
@@ -99,30 +99,13 @@ func Sha256Api(api frontend.API, data ...frontend.Variable) frontend.Variable {
 			// S0 := (a rightrotate 2) xor (a rightrotate 13) xor (a rightrotate 22)
 			S0 := uapi32.Xor(sha.rightRotate(a, 2), sha.rightRotate(a, 13), sha.rightRotate(a, 22))
 
-			// https://github.com/akosba/jsnark/blob/master/JsnarkCircuitBuilder/src/examples/gadgets/hash/SHA256Gadget.java
-			minusTwo := [32]frontend.Variable{0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1} // -2 in little endian, of size 32
-			// tmp4Bits := sha.api.ToBinary(0, 32)
-			tmp4Bits := make([]frontend.Variable, 32)
-			var x, y, z []frontend.Variable
-			if i%2 == 1 {
-				x = c[:]
-				y = b[:]
-				z = a[:]
-			} else {
-				x = a[:]
-				y = b[:]
-				z = c[:]
-			}
-
+			var tmp4Bits keccakf.Xuint32
 			for j := 0; j < 32; j++ {
-				t4t1 := gnark.And(x[j], y[j])
-				t4t2 := gnark.Or(gnark.Or(x[j], y[j]), gnark.And(t4t1, minusTwo[j]))
-				tmp4Bits[j] = gnark.Or(t4t1, gnark.And(z[j], t4t2))
+				tmp4Bits[j] = api.Lookup2(a[j], b[j], 0, c[j], c[j], 1)
 			}
-			tmp4 := gnark.FromBinary(tmp4Bits...)
 
 			// t2 computation
-			temp2 := gnark.Add(uapi32.FromUint32(S0), tmp4)
+			temp2 := gnark.Add(uapi32.FromUint32(S0), uapi32.FromUint32(tmp4Bits))
 
 			/*
 			   h := g
@@ -217,6 +200,14 @@ func padding(in []frontend.Variable, sha Sha256) [][]frontend.Variable {
 		schedule = append(schedule, padded[i*64:i*64+64])
 	}
 	return schedule
+}
+
+func (h *Sha256) calculateCh(e, f, g keccakf.Xuint32) keccakf.Xuint32 {
+	var res keccakf.Xuint32
+	for i := range res {
+		res[i] = h.api.Select(e[i], f[i], g[i])
+	}
+	return res
 }
 
 func (h *Sha256) toBytes(x keccakf.Xuint32) []keccakf.Xuint8 {
