@@ -98,13 +98,17 @@ func Sha256Api(api frontend.API, data ...frontend.Variable) frontend.Variable {
 
 			// S0 := (a rightrotate 2) xor (a rightrotate 13) xor (a rightrotate 22)
 			S0 := uapi32.Xor(sha.rightRotate(a, 2), sha.rightRotate(a, 13), sha.rightRotate(a, 22))
+
 			var maj keccakf.Xuint32
 			if i%2 == 1 {
 				maj = sha.computeMaj(c, b, a, &tempMaj1, &tempMaj2, true)
 			} else {
 				maj = sha.computeMaj(a, b, c, &tempMaj1, &tempMaj2, false)
 			}
+
+			// t2 computation
 			temp2 := gnark.Add(uapi32.FromUint32(S0), uapi32.FromUint32(maj))
+
 			/*
 			   h := g
 			   g := f
