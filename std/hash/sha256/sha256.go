@@ -3,6 +3,7 @@ package sha256
 import (
 	"fmt"
 	"github.com/consensys/gnark-crypto/ecc"
+	cs "github.com/consensys/gnark/constraint/lazy"
 	"github.com/consensys/gnark/frontend"
 	"github.com/consensys/gnark/std/permutation/keccakf"
 )
@@ -22,7 +23,7 @@ var (
 
 type Digest struct {
 	h   [8]keccakf.Xuint32
-	x   [chunk]keccakf.Xuint8 // 64 byte
+	x   []frontend.Variable // 64 byte
 	nx  int
 	len uint64
 	id  ecc.ID
@@ -54,6 +55,7 @@ func New(api frontend.API) Digest {
 	res.id = ecc.BN254
 	res.api = api
 	res.nx = 0
+	res.x = make([]frontend.Variable, chunk)
 	res.len = 0
 	res.Reset()
 	return res
@@ -61,15 +63,15 @@ func New(api frontend.API) Digest {
 
 // p: byte array
 func (d *Digest) Write(p []frontend.Variable) (nn int, err error) {
-	var in []keccakf.Xuint8
+	var in []frontend.Variable
 	for i := range p {
-		in = append(in, keccakf.NewUint8API(d.api).AsUint8(p[i]))
+		in = append(in, p[i])
 	}
 	return d.write(in)
 
 }
 
-func (d *Digest) write(p []keccakf.Xuint8) (nn int, err error) {
+func (d *Digest) write(p []frontend.Variable) (nn int, err error) {
 	nn = len(p)
 	d.len += uint64(nn)
 
@@ -77,7 +79,13 @@ func (d *Digest) write(p []keccakf.Xuint8) (nn int, err error) {
 		n := copy(d.x[d.nx:], p)
 		d.nx += n
 		if d.nx == chunk {
-			blockGeneric(d, d.x[:]...)
+			var in []keccakf.Xuint8
+			for i := range d.x {
+				in = append(in, keccakf.NewUint8API(d.api).AsUint8(d.x[i]))
+			}
+			d.api.RecordConstraintsForLazy(cs.GetLazySha256Key(len(d.x[:])), false, &d.x)
+			permutation(d, in[:]...)
+			d.api.RecordConstraintsForLazy(cs.GetLazySha256Key(len(d.x[:])), true, &d.x)
 			d.nx = 0
 		}
 		p = p[n:]
@@ -85,7 +93,13 @@ func (d *Digest) write(p []keccakf.Xuint8) (nn int, err error) {
 
 	if len(p) >= chunk {
 		n := len(p) &^ (chunk - 1)
-		blockGeneric(d, p[:n]...)
+		var in []keccakf.Xuint8
+		for i := range p {
+			in = append(in, keccakf.NewUint8API(d.api).AsUint8(p[i]))
+		}
+		d.api.RecordConstraintsForLazy(cs.GetLazySha256Key(len(in[:])), false, &p)
+		permutation(d, in[:]...)
+		d.api.RecordConstraintsForLazy(cs.GetLazySha256Key(len(in[:])), true, &p)
 		p = p[n:]
 	}
 
@@ -104,10 +118,10 @@ func (d *Digest) Sum() frontend.Variable {
 
 func (d *Digest) checkSum() frontend.Variable {
 	l := d.len
-	var tmp [64]keccakf.Xuint8
-	tmp[0] = keccakf.ConstUint8(0x80)
+	var tmp [64]frontend.Variable
+	tmp[0] = frontend.Variable(0x80)
 	for i := 1; i < 64; i++ {
-		tmp[i] = keccakf.ConstUint8(0x0)
+		tmp[i] = frontend.Variable(0x0)
 	}
 	if l%64 < 56 {
 		_, err := d.write(tmp[0 : 56-l%64])
@@ -125,7 +139,7 @@ func (d *Digest) checkSum() frontend.Variable {
 	bits := d.api.ToBinary(msgLen, 64) // 64 bit = 8 byte
 	for i, j := 7, 0; i >= 0; i, j = i-1, j+1 {
 		start := i * 8
-		copy(tmp[j][:], bits[start : start+8][:])
+		tmp[j] = d.api.FromBinary(bits[start : start+8][:]...)
 	}
 	_, err := d.write(tmp[0:8])
 	if err != nil {

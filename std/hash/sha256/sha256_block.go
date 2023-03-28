@@ -31,7 +31,7 @@ var _K = [64]frontend.Variable{
 	frontend.Variable(0x19a4c116), frontend.Variable(0x1e376c08), frontend.Variable(0x2748774c), frontend.Variable(0x34b0bcb5), frontend.Variable(0x391c0cb3), frontend.Variable(0x4ed8aa4a), frontend.Variable(0x5b9cca4f), frontend.Variable(0x682e6ff3),
 	frontend.Variable(0x748f82ee), frontend.Variable(0x78a5636f), frontend.Variable(0x84c87814), frontend.Variable(0x8cc70208), frontend.Variable(0x90befffa), frontend.Variable(0xa4506ceb), frontend.Variable(0xbef9a3f7), frontend.Variable(0xc67178f2)}
 
-func blockGeneric(dig *Digest, data ...keccakf.Xuint8) {
+func permutation(dig *Digest, data ...keccakf.Xuint8) {
 	sha := newSha256(dig.api)
 	uapi8 := sha.uapi8
 	uapi32 := sha.uapi32
