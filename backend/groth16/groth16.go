@@ -20,9 +20,12 @@
 package groth16
 
 import (
+	"bufio"
+	"encoding/gob"
 	"fmt"
 	"io"
 	"os"
+	"sync"
 
 	"github.com/consensys/gnark-crypto/ecc"
 	"github.com/consensys/gnark/backend"
@@ -599,4 +602,277 @@ func SplitDumpPK(Pk ProvingKey, session string) error {
 	}
 
 	return nil
+}
+
+func SplitDumpR1CS(ccs *cs_bn254.R1CS, session string, batchSize int) error {
+	// E part
+	{
+		ccs2 := &cs_bn254.R1CS{}
+		ccs2.CoeffTable = ccs.CoeffTable
+		ccs2.R1CSCore.System = ccs.R1CSCore.System
+
+		name := fmt.Sprintf("%s.r1cs.E.save", session)
+		csFile, err := os.Create(name)
+		if err != nil {
+			return err
+		}
+		// cnt, err := ccs2.WriteTo(csFile)
+		// fmt.Println("written ", cnt, name)
+		ccs2.WriteTo(csFile)
+	}
+
+	N := len(ccs.R1CSCore.Constraints)
+	for i := 0; i < N; {
+		// dump R1C[i, min(i+batchSize, end)]
+		ccs2 := &cs_bn254.R1CS{}
+		iNew := i + batchSize
+		if iNew > N {
+			iNew = N
+		}
+		ccs2.R1CSCore.Constraints = ccs.R1CSCore.Constraints[i:iNew]
+		name := fmt.Sprintf("%s.r1cs.Cons.%d.%d.save", session, i, iNew)
+		csFile, err := os.Create(name)
+		if err != nil {
+			return err
+		}
+		// cnt, err := ccs2.WriteTo(csFile)
+		// fmt.Println("written ", cnt, name)
+		ccs2.WriteTo(csFile)
+
+		i = iNew
+	}
+
+	return nil
+}
+
+func SplitDumpR1CSBinary(ccs *cs_bn254.R1CS, session string, batchSize int) error {
+	// E part
+	{
+		ccs2 := &cs_bn254.R1CS{}
+		ccs2.CoeffTable = ccs.CoeffTable
+		ccs2.R1CSCore.System = ccs.R1CSCore.System
+
+		name := fmt.Sprintf("%s.r1cs.E.save", session)
+		csFile, err := os.Create(name)
+		if err != nil {
+			return err
+		}
+		// cnt, err := ccs2.WriteTo(csFile)
+		// fmt.Println("written ", cnt, name)
+		ccs2.WriteTo(csFile)
+	}
+
+	N := len(ccs.R1CSCore.Constraints)
+	for i := 0; i < N; {
+		// dump R1C[i, min(i+batchSize, end)]
+		ccs2 := &cs_bn254.R1CS{}
+		iNew := i + batchSize
+		if iNew > N {
+			iNew = N
+		}
+		ccs2.R1CSCore.Constraints = ccs.R1CSCore.Constraints[i:iNew]
+		name := fmt.Sprintf("%s.r1cs.Cons.%d.%d.save", session, i, iNew)
+		csFile, err := os.Create(name)
+		if err != nil {
+			return err
+		}
+		// cnt, err := ccs2.WriteTo(csFile)
+		// fmt.Println("written ", cnt, name)
+		writer := bufio.NewWriter(csFile)
+		enc := gob.NewEncoder(writer)
+		err = enc.Encode(ccs2)
+		if err != nil {
+			panic(err)
+		}
+		//ccs2.WriteTo(csFile)
+
+		i = iNew
+	}
+
+	return nil
+}
+
+func LoadSplittedR1CS(session string, N, batchSize int) *cs_bn254.R1CS {
+	ccs := &cs_bn254.R1CS{}
+	// E part
+	{
+		ccs2 := &cs_bn254.R1CS{}
+
+		name := fmt.Sprintf("%s.r1cs.E.save", session)
+		csFile, err := os.Open(name)
+		if err != nil {
+			panic(err)
+		}
+		cnt, err := ccs2.ReadFrom(csFile)
+		fmt.Println("read ", cnt, name)
+
+		ccs.CoeffTable = ccs2.CoeffTable
+		ccs.R1CSCore.System = ccs2.R1CSCore.System
+	}
+	ccs.R1CSCore.Constraints = make([]constraint.R1C, N)
+	for i := 0; i < N; {
+		// read R1C[i, min(i+batchSize, end)]
+		ccs2 := &cs_bn254.R1CS{}
+		iNew := i + batchSize
+		if iNew > N {
+			iNew = N
+		}
+		name := fmt.Sprintf("%s.r1cs.Cons.%d.%d.save", session, i, iNew)
+		csFile, err := os.Open(name)
+		if err != nil {
+			panic(err)
+		}
+		cnt, err := ccs2.ReadFrom(csFile)
+		fmt.Println("read ", cnt, name)
+		copy(ccs.R1CSCore.Constraints[i:iNew], ccs2.R1CSCore.Constraints)
+
+		i = iNew
+	}
+
+	return ccs
+}
+
+func LoadSplittedR1CSConcurrent(session string, N, batchSize, NCore int) *cs_bn254.R1CS {
+	ccs := &cs_bn254.R1CS{}
+	ccs.R1CSCore.Constraints = make([]constraint.R1C, N)
+
+	var wg sync.WaitGroup
+	chTasks := make(chan int, NCore)
+	// worker pool
+	for core := 0; core < NCore; core++ {
+		go func() {
+			for i := range chTasks {
+				if i < 0 {
+					// E part
+					ccs2 := &cs_bn254.R1CS{}
+
+					name := fmt.Sprintf("%s.r1cs.E.save", session)
+					csFile, err := os.Open(name)
+					if err != nil {
+						panic(err)
+					}
+					// cnt, err := ccs2.ReadFrom(csFile)
+					// fmt.Println("read ", cnt, name)
+					ccs2.ReadFrom(csFile)
+
+					ccs.CoeffTable = ccs2.CoeffTable
+					ccs.R1CSCore.System = ccs2.R1CSCore.System
+
+					wg.Done()
+				} else {
+					ccs2 := &cs_bn254.R1CS{}
+					iNew := i + batchSize
+					if iNew > N {
+						iNew = N
+					}
+					name := fmt.Sprintf("%s.r1cs.Cons.%d.%d.save", session, i, iNew)
+					csFile, err := os.Open(name)
+					if err != nil {
+						panic(err)
+					}
+					// cnt, err := ccs2.ReadFrom(csFile)
+					// fmt.Println("read ", cnt, name)
+					ccs2.ReadFrom(csFile)
+					copy(ccs.R1CSCore.Constraints[i:iNew], ccs2.R1CSCore.Constraints)
+
+					wg.Done()
+				}
+			}
+		}()
+	}
+
+	defer func() {
+		close(chTasks)
+	}()
+
+	wg.Add(1)
+	chTasks <- -1
+	for i := 0; i < N; {
+		// read R1C[i, min(i+batchSize, end)]
+		iNew := i + batchSize
+		if iNew > N {
+			iNew = N
+		}
+		wg.Add(1)
+		chTasks <- i
+
+		i = iNew
+	}
+	wg.Wait()
+
+	return ccs
+}
+
+func LoadSplittedR1CSConcurrentBinary(session string, N, batchSize, NCore int) *cs_bn254.R1CS {
+	ccs := &cs_bn254.R1CS{}
+	ccs.R1CSCore.Constraints = make([]constraint.R1C, N)
+
+	var wg sync.WaitGroup
+	chTasks := make(chan int, NCore)
+	// worker pool
+	for core := 0; core < NCore; core++ {
+		go func() {
+			for i := range chTasks {
+				if i < 0 {
+					// E part
+					ccs2 := &cs_bn254.R1CS{}
+
+					name := fmt.Sprintf("%s.r1cs.E.save", session)
+					csFile, err := os.Open(name)
+					if err != nil {
+						panic(err)
+					}
+					// cnt, err := ccs2.ReadFrom(csFile)
+					// fmt.Println("read ", cnt, name)
+					ccs2.ReadFrom(csFile)
+
+					ccs.CoeffTable = ccs2.CoeffTable
+					ccs.R1CSCore.System = ccs2.R1CSCore.System
+
+					wg.Done()
+				} else {
+					ccs2 := &cs_bn254.R1CS{}
+					iNew := i + batchSize
+					if iNew > N {
+						iNew = N
+					}
+					name := fmt.Sprintf("%s.r1cs.Cons.%d.%d.save", session, i, iNew)
+					csFile, err := os.Open(name)
+					if err != nil {
+						panic(err)
+					}
+					// cnt, err := ccs2.ReadFrom(csFile)
+					// fmt.Println("read ", cnt, name)
+					//ccs2.ReadFrom(csFile)
+					writer := bufio.NewReader(csFile)
+					enc := gob.NewDecoder(writer)
+					err = enc.Decode(ccs2)
+					copy(ccs.R1CSCore.Constraints[i:iNew], ccs2.R1CSCore.Constraints)
+
+					wg.Done()
+				}
+			}
+		}()
+	}
+
+	defer func() {
+		close(chTasks)
+	}()
+
+	wg.Add(1)
+	chTasks <- -1
+	for i := 0; i < N; {
+		// read R1C[i, min(i+batchSize, end)]
+		iNew := i + batchSize
+		if iNew > N {
+			iNew = N
+		}
+		wg.Add(1)
+		chTasks <- i
+
+		i = iNew
+	}
+	wg.Wait()
+
+	return ccs
 }
