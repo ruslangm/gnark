@@ -82,13 +82,13 @@ func Sha256Api(api frontend.API, data ...frontend.Variable) frontend.Variable {
 		g := h6
 		h := h7
 
+		var tempMaj1, tempMaj2 keccakf.Xuint32
 		for i := 0; i < 64; i++ {
 			// S1 := (e rightrotate 6) xor (e rightrotate 11) xor (e rightrotate 25)
 			S1 := uapi32.Xor(sha.rightRotate(e, 6), sha.rightRotate(e, 11), sha.rightRotate(e, 25))
 
 			// ch := (e and f) xor ((not e) and g)
-			ch := sha.calculateCh(e, f, g)
-
+			ch := sha.computeCh(e, f, g)
 			sum1 := gnark.Add(uapi32.FromUint32(h), uapi32.FromUint32(S1))
 			sum2 := gnark.Add(uapi32.FromUint32(ch), k[i])
 			sum3 := gnark.Add(sum2, uapi32.FromUint32(w[i]))
@@ -99,13 +99,15 @@ func Sha256Api(api frontend.API, data ...frontend.Variable) frontend.Variable {
 			// S0 := (a rightrotate 2) xor (a rightrotate 13) xor (a rightrotate 22)
 			S0 := uapi32.Xor(sha.rightRotate(a, 2), sha.rightRotate(a, 13), sha.rightRotate(a, 22))
 
-			var tmp4Bits keccakf.Xuint32
-			for j := 0; j < 32; j++ {
-				tmp4Bits[j] = api.Lookup2(a[j], b[j], 0, c[j], c[j], 1)
+			var maj keccakf.Xuint32
+			if i%2 == 1 {
+				maj = sha.computeMaj(c, b, a, &tempMaj1, &tempMaj2, true)
+			} else {
+				maj = sha.computeMaj(a, b, c, &tempMaj1, &tempMaj2, false)
 			}
 
 			// t2 computation
-			temp2 := gnark.Add(uapi32.FromUint32(S0), uapi32.FromUint32(tmp4Bits))
+			temp2 := gnark.Add(uapi32.FromUint32(S0), uapi32.FromUint32(maj))
 
 			/*
 			   h := g
@@ -202,7 +204,21 @@ func padding(in []frontend.Variable, sha Sha256) [][]frontend.Variable {
 	return schedule
 }
 
-func (h *Sha256) calculateCh(e, f, g keccakf.Xuint32) keccakf.Xuint32 {
+func (h *Sha256) computeMaj(a, b, c keccakf.Xuint32, tempMaj1, tempMaj2 *keccakf.Xuint32, useLazy bool) keccakf.Xuint32 {
+	var res keccakf.Xuint32
+	for i := range res {
+		if useLazy {
+			res[i] = h.api.Add(tempMaj1[i], h.api.Mul(tempMaj2[i], c[i]))
+		} else {
+			tempMaj1[i] = h.api.Mul(a[i], b[i])
+			tempMaj2[i] = h.api.Add(a[i], b[i], h.api.Mul(tempMaj1[i], -2))
+			res[i] = h.api.Add(tempMaj1[i], h.api.Mul(tempMaj2[i], c[i]))
+		}
+	}
+	return res
+}
+
+func (h *Sha256) computeCh(e, f, g keccakf.Xuint32) keccakf.Xuint32 {
 	var res keccakf.Xuint32
 	for i := range res {
 		res[i] = h.api.Select(e[i], f[i], g[i])
