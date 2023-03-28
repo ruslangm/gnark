@@ -74,12 +74,12 @@ func TestC(t *testing.T) {
 		// fmt.Println("size of ccs3.system:", size.Of(ccs3.R1CSCore.System))
 		// fmt.Println("size of ccs3.constraints:", size.Of(ccs3.R1CSCore.Constraints))
 		batchSize := 100000 // 1 << 18
-		SplitDumpR1CS(ccs3, "LoadTestFoo", batchSize)
+		groth16.SplitDumpR1CS(ccs3, "LoadTestFoo", batchSize)
 
 		tCheck = time.Now()
 		fmt.Println("r1cs cbor multi load", tCheck)
 		// ccs3r := LoadSplittedR1CSConcurrent("LoadTestFoo", len(ccs3.Constraints), 10000)
-		ccsf := LoadSplittedR1CSConcurrent("LoadTestFoo", len(ccs3.Constraints), batchSize, runtime.NumCPU())
+		ccsf := groth16.LoadSplittedR1CSConcurrent("LoadTestFoo", len(ccs3.Constraints), batchSize, runtime.NumCPU())
 		fmt.Println()
 		fmt.Println("############################################################")
 		fmt.Println("r1cs cbor multi load finished", time.Since(tCheck))
@@ -119,12 +119,12 @@ func TestC(t *testing.T) {
 		// fmt.Println("size of ccs3.system:", size.Of(ccs3.R1CSCore.System))
 		// fmt.Println("size of ccs3.constraints:", size.Of(ccs3.R1CSCore.Constraints))
 		batchSize := 100000 // 1 << 18
-		SplitDumpR1CSBinary(ccs3, "LoadTestFoo", batchSize)
+		groth16.SplitDumpR1CSBinary(ccs3, "LoadTestFoo", batchSize)
 
 		tCheck = time.Now()
 		fmt.Println("r1cs multi load", tCheck)
 		// ccs3r := LoadSplittedR1CSConcurrent("LoadTestFoo", len(ccs3.Constraints), 10000)
-		ccsf := LoadSplittedR1CSConcurrentBinary("LoadTestFoo", len(ccs3.Constraints), batchSize, runtime.NumCPU())
+		ccsf := groth16.LoadSplittedR1CSConcurrentBinary("LoadTestFoo", len(ccs3.Constraints), batchSize, runtime.NumCPU())
 		fmt.Println()
 		fmt.Println("############################################################")
 		fmt.Println("r1cs binary multi load finished", time.Since(tCheck))
